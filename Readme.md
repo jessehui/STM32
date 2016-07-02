@@ -88,16 +88,46 @@ Thumb指令可以看做是ARM指令压缩形式的子集，是针对代码密度
 ####锁相环
 PLL(Phase Locked Loop)作用:数字芯片有个时钟树的概念，现在比如就是一根导线代替锁相环，芯片外面在时钟的上升沿开始给芯片送入一组数据，芯片内部由于有时钟树的存在，导致了内部时序电路实际使用的时钟是延迟过的，进而产生一个数据漂移的现象。但是有锁相环了，我们可以把时钟树的其中一个分支接入锁相环，使时钟树末梢的相位频率与参考信号保持一致，就不会有数据漂移的现象了。  
 以上是锁相环最简单的使用，锁相环还有倍频作用，因为输出的时钟是它自己内部的压控振荡器产生的，若加一个分频器，再与输入参考时钟相比较，就可得到一个频率加N倍的时钟信号，当然相位还是和参考时钟是同步的。
-
+```c
+//系统时钟初始化函数
+//plln:主PLL倍频系数(PLL倍频),取值范围:64~432.
+//pllm:主PLL和音频PLL分频系数(PLL之前的分频),取值范围:2~63.
+//pllp:系统时钟的主PLL分频系数(PLL之后的分频),取值范围:2,4,6,8.(仅限这4个值!)
+//pllq:USB/SDIO/随机数产生器等的主PLL分频系数(PLL之后的分频),取值范围:2~15.
+void Stm32_Clock_Init(u32 plln,u32 pllm,u32 pllp,u32 pllq)
+{  
+	RCC->CR|=0x00000001;		//设置HISON,开启内部高速RC振荡
+	RCC->CFGR=0x00000000;		//CFGR清零 
+	RCC->CR&=0xFEF6FFFF;		//HSEON,CSSON,PLLON清零 
+	RCC->PLLCFGR=0x24003010;	//PLLCFGR恢复复位值 
+	RCC->CR&=~(1<<18);			//HSEBYP清零,外部晶振不旁路
+	RCC->CIR=0x00000000;		//禁止RCC时钟中断 
+	Sys_Clock_Set(plln,pllm,pllp,pllq);//设置时钟 
+	//配置向量表				  
+#ifdef  VECT_TAB_RAM
+	MY_NVIC_SetVectorTable(1<<29,0x0);
+#else   
+	MY_NVIC_SetVectorTable(0,0x0);
+#endif 
+}		    
+```
 
 ####时钟控制
+在STM32中，有五个时钟源，为HSI、HSE、LSI、LSE、PLL。 其实是四个时钟源，如下图所示（灰蓝色），PLL是由锁相环电路倍频得到PLL时钟。  
+1. HSI是高速内部时钟，RC振荡器，频率为8MHz。
+2. HSE是高速外部时钟，可接石英/陶瓷谐振器，或者接外部时钟源，频率范围为4MHz~16MHz。
+3. LSI是低速内部时钟，RC振荡器，频率为40kHz。
+4. LSE是低速外部时钟，接频率为32.768kHz的石英晶体。
+5. PLL为锁相环倍频输出，其时钟输入源可选择为HSI/2、HSE或者HSE/2。倍频可选择为2~16倍，但是其输出频率最大不得超过72MHz。
 STM32F4 的时钟设计的比较复杂，各个时钟基本都是可控的，任何外设都有对应的时钟控制开关，这样的设计，对降低功耗是非常有用的，不用的外设不开启时钟，就可以大大降低其功耗。
-时钟设置函数:`u8 Sys_Clock_Set(u32 plln,u32 pllm,u32 pllp,u32 pllq)`   
+时钟设置函数:  
+`u8 Sys_Clock_Set(u32 plln,u32 pllm,u32 pllp,u32 pllq)`   
 - pllm: 主PLL和音频PLL分频系数(PLL之前的分频)
 - plln: 主PLL分频系数(PLL倍频)
 - pllp: 系统时钟的主PLL分频系数(PLL之后的分频)
 - pllq: USB/SDIO/随机数产生器等的主PLL分频系数(PLL之后的分频)
 VCO即压控振荡器，是射频电路的重要组成部分。 射频电路多采用调制解调方式，因此严重依赖本振。
+
 
 
 ####内联汇编
@@ -164,6 +194,8 @@ U3_RX(串口3的接收引脚), 在`PB11/PC11/PD9`上面都有这个复用功能,
 ####中断管理
 CM4内核支持256个中断, 其中包含16个内核中断和240个外部中断. 并且具有 256级的可编程中断设置.  
 STM32F40XX/STM32F41XX只是用了CM4内核的一部分,共有92个中断.包括10个内核中断和82个可屏蔽中断. 具有16级可编程的中断优先级.
+抢占优先级就是假如当前情况是在运行着某个中断程序的情况先，触发了一个中断信号，而且比当前的中断等级要高，那么当前的中断程序会被挂起，直接跳到高抢占优先级的中断程序去。一般说法就是：具有高抢占式优先级的中断可以在具有低抢占式优先级的中断处理过程中被响应，即中断嵌套，或者说高抢占式优先级的中断可以嵌套低抢占式优先级的中断。  
+响应优先级就是来一个中断运行一个中断程序，如果两个中断信号来到，并且抢占优先级相同，那么判断响应优先级高的先运行，结束后再运行优先级低的。而这运行中断程序当中再来同抢占优先级，不同响应优先级，是不会打断当前运行的程序，也只会等到当前中断程序运行完后再运行。即这两个中断没有任何嵌套关系。  
 
 NVIC: Nested Vectored Interrupt Controller   
 嵌套向量中断控制器  
@@ -178,12 +210,20 @@ IABR:中断激活标志位寄存器组(Interrupt Active Bit Register). 只读寄
 IP[240](Interrupt Priority Registers)是一个中断优先级控制的寄存器组. STM32中断分组与这个寄存器组密切相关.  
 IP寄存器组由240个8bit寄存器组成.每个可屏蔽中断占用8bit. 这样可以总共表示240个可屏蔽中断.而STM32F40XX只用了其中的82个,IP[81]~IP[0]分别对应中断81~0. 而每个可屏蔽中断占用的8bit并未全部使用. 而是只用了高4位.
 
-STM32F4中断分组: 中断共分5组,组0~4. 分组设置由`SCB->AIRCR`寄存器的`bit10~8`定义.  
+STM32F4中断分组: 这里的中断分组指的是把每个中断优先级分成2种,抢占优先级和响应优先级后, 要给每个中断的2种优先级分配bit数.一共5种分配方式所以共分5组,组0~4. 分组设置由`SCB->AIRCR`寄存器的`bit10~8`定义.  
 SCB: System Control Block register  
-AIRCR: Application Interrupt and Reset Control Register
+AIRCR: Application Interrupt and Reset Control Register  
+系统软复位也用到此寄存器:
+```C
+void Sys_Soft_Reset(void)
+{
+	SCB->AIRCR = 0x05FA0000 | (u32)0x04;
+}
+```
+要实现STM32F4的软复位, 只要置位`Bit2`, 这样就可以请求一次软复位. __但是__ ,该寄存器的Bit31~16为访问钥匙, 要将访问钥匙`0X05FA0000`与我们要进行的操作相`或`,然后写入`AIRCR`, 这样才被CM4接受.
 
 
-组 	| AIRCR[10:8] 	| bit[7:4]分配情况 | 分配结果 						   
+组 	| AIRCR[10:8] 	| IP[7:4]分配情况 | 分配结果 						   
 -------|---------------|------------------|-----------------------------------
 0		| 111		 	| 	0:4 		   | 0 位抢占优先级， 4 位响应优先级   
 1	 	| 110			|   1:3 		   | 1 位抢占优先级， 3 位响应优先级   
@@ -191,13 +231,105 @@ AIRCR: Application Interrupt and Reset Control Register
 3	 	| 100			|   3:1 		   | 3 位抢占优先级， 1 位响应优先级   
 4	 	| 011			|   4:0			   | 4 位抢占优先级， 0 位响应优先级   
 
+例如: 组设置为3, 那么此时所有82个中断, 每个中断的中断优先寄存器(`IP`)的高四位中的最高3位是抢占优先级, 低1位是响应优先级. 每个中断抢占优先级可以被设为0~7(因为有3位), 响应优先级可以被设为1或0. 抢占优先级高于响应优先级, 数值越小所代表的优先级越高.   
+注: (1)如果两个中断的抢占优先级和响应优先级都一样的话, 则看哪个中断先发生  
+(2)高优先级的抢占优先级是可以打断正在进行的低抢占优先级中断的. 但是高优先级的响应优先级不可以打断低响应优先级的中断
 
+中断配置:
+我们知道 SCB->AIRCR 的修改需要通过在高 16 位写入 0X05FA这个密钥才能修改的，故在设置 AIRCR 之前，应该把密钥加入到要写入的内容的高 16 位，以保证能正常的写入 AIRCR。在修改 AIRCR 的时候，我们一般采用读改写的步骤，来实现不改变 AIRCR 原来的其他设置。
 
-
-
-
-
-
+NVIC设置参数函数:`MY_NVIC_Init`. 该函数有4个参数, NVIC_PreemptionPriority(抢占优先级), NVIC_SubPriority(响应优先级), NVIC_Channel(中断编号), NVIC_Group(中断分组0~4). __注意优先级不能超过设定的组的范围__. 优先级原则是数值越小, 越优先.  
   
+
+####外部中断
+STM32F4的EXTI控制器(External Interrupt/Event Controller)支持23个外部中断事件请求. 每个中断设有状态位, 每个中断/事件都有独立的触发和屏蔽设置.
+```C
+/** 
+  * @brief External Interrupt/Event Controller
+  */
+
+typedef struct
+{
+  __IO uint32_t IMR;    /*!< EXTI Interrupt mask register,            Address offset: 0x00 */
+  __IO uint32_t EMR;    /*!< EXTI Event mask register,                Address offset: 0x04 */
+  __IO uint32_t RTSR;   /*!< EXTI Rising trigger selection register,  Address offset: 0x08 */
+  __IO uint32_t FTSR;   /*!< EXTI Falling trigger selection register, Address offset: 0x0C */
+  __IO uint32_t SWIER;  /*!< EXTI Software interrupt event register,  Address offset: 0x10 */
+  __IO uint32_t PR;     /*!< EXTI Pending register,                   Address offset: 0x14 */
+} EXTI_TypeDef;
+
+```
+IMR: 中断屏蔽寄存器. 32位但只有前23位有效. 每位控制一个外部中断. 置1开启中断, 否则关闭.  
+EMR: 事件屏蔽寄存器. 同IMR  
+RTSR: 上升沿触发选择寄存器.同IMR. 位X对应线X上的上升沿触发. 如果设置为1, 则是允许上升沿触发中断/事件. 否则不允许.  
+FTSR: 下降沿触发选择寄存器. 同RTSR.  
+PR: 挂起寄存器. 当外部中断线上发生了选择的边沿事件, 该寄存器的对应位会被置为1. 对应线上没有发生触发请求时为0. 通过向该寄存器特定位写1来清除该位. 在中断服务函数里面经常会要向该寄存器的对应位写1来清除中断请求. 
+SWIER: 软件中断事件寄存器. 在未设置IMR和EMR时, 通过向该寄存器的x位写1, 将设置PR中相应位挂起. 如果设置了IMR,EMR将产生一次中断.   
+外部 IO 口的中断，还需要一个寄存器配置，也就是外部中断配置寄存器 `EXTICR`。这是因为 STM32F4 任何一个 IO 口都可以配置成中断输入口，但是 IO 口的数目远大于中断线数（ 16 个）。于是 STM32F4 就这样设计，GPIOA~GPIOI的[15： 0]分别对应中断线 15~0。这样每个中断线对应了最多 9 个 IO 口(A~I). 所以一共有16*9个选项. 而中断线每次只能连接到 1 个 IO 口上，这样就需要 EXTICR 来决定对应的中断线配置到哪个GPIO 上了.  
+```C
+/** 
+  * @brief System configuration controller
+  */
+  
+typedef struct
+{
+  __IO uint32_t MEMRMP;       /*!< SYSCFG memory remap register,                      Address offset: 0x00      */
+  __IO uint32_t PMC;          /*!< SYSCFG peripheral mode configuration register,     Address offset: 0x04      */
+  __IO uint32_t EXTICR[4];    /*!< SYSCFG external interrupt configuration registers, Address offset: 0x08-0x14 */
+  uint32_t      RESERVED[2];  /*!< Reserved, 0x18-0x1C                                                          */ 
+  __IO uint32_t CMPCR;        /*!< SYSCFG Compensation cell control register,         Address offset: 0x20      */
+} SYSCFG_TypeDef;
+
+```  
+EXTICR寄存器在SYSCFG结构体中定义. 可以看到EXTICR寄存器组总共有4个, 每个32位, 但只用了其低16位. 每个EXTICR寄存器的低16位被以4位分成一组, 这样就可以配置4*4=__16__个引脚(15~0). 然后每一组有4位, 可以用来选择PA~PI(9个).
+
+
+####UART
+`USART1_IRQHandler()`函数是串口1的中断响应函数. 当串口1发生了相应的中断,就会跳到该函数执行. 
+对于`uart_init()`函数, 由于STM32F4采用了分数波特率, 所以STM32F4的串口波特率设置范围很宽, 而且误差很小.
+每个串口都有一个自己独立的波特率寄存器USART_BRR, 通过设置该寄存器就可以达到配置不同波特率的目的.
+
+####1_LED
+同时配置两个IO口控制LED.  
+```C
+GPIO_Set(GPIOF,PIN9|PIN10,GPIO_MODE_OUT,GPIO_OTYPE_PP,
+GPIO_SPEED_100M,GPIO_PUPD_PU); //PF9,PF10 设置
+```
+在配置 STM32F4 外设的时候，任何时候都要先使能该外设的时钟！AHB1ENR 是 AHB1 总线上的外设时钟使能寄存器
+
+```C
+#define LED0 PFout(9) // DS0
+#define LED1 PFout(10) // DS1
+```
+这里使用的是位带操作来实现操作某个 IO 口的.
+
+```C
+//IO口操作,只对单一的IO口!
+//确保n的值小于16!
+#define PAout(n)   BIT_ADDR(GPIOA_ODR_Addr,n)  //输出 
+#define PAin(n)    BIT_ADDR(GPIOA_IDR_Addr,n)  //输入 
+//...
+#define PFout(n)   BIT_ADDR(GPIOF_ODR_Addr,n)  //输出 
+#define PFin(n)    BIT_ADDR(GPIOF_IDR_Addr,n)  //输入
+```
+
+
+####IAP 和 ISP
+IAP: In Application Programming，IAP是用户自己的程序在运行过程中对User Flash的部分区域进行烧写，目的是为了在产品发布后可以方便地通过预留的通信口对产品中的固件程序进行更新升级。  
+通常在用户需要实现IAP功能时，即用户程序运行中作自身的更新操作，需要在设计固件程序时编写两个项目代码，第一个项目程序不执行正常的功能操作，而只是通过某种通信管道(如USB、USART)接收程序或数据，执行对第二部分代码的更新；第二个项目代码才是真正的功能代码。这两部分项目代码都同时烧录在User Flash中，当芯片上电后，首先是第一个项目代码开始运行，它作如下操作：
+(1) 检查是否需要对第二部分代码进行更新  
+(2) 如果不需要更新则转到(4)  
+(3) 执行更新操作  
+(4) 跳转到第二部分代码执行  
+第一部分代码必须通过其它手段，如JTAG或ISP烧入；第二部分代码可以使用第一部分代码IAP功能烧入，也可以和第一部分代码一道烧入，以后需要程序更新是再通过第一部分IAP代码更新。  
+
+ISP: In System Program 在系统编程;
+用写入器将code烧入,不过,芯片可以在目标板上,不用取出来,在设计目标板的时候就将接口设计在上面,所以叫"在系统编程",即不用脱离系统。已经编程的器件也可以用ISP方式擦除或再编程，ISP技术是未来发展方向。
+与ISP对应的有IAP,即In Applicatin Programming在应用编程；
+
+
+
+
+
 
 
