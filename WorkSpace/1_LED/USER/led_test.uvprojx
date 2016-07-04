@@ -334,7 +334,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F40_41xxx</Define>
               <Undefine></Undefine>
-              <IncludePath>..\SYSTEM\delay;..\SYSTEM\usart;..\SYSTEM\sys;..\HARDWARE\LED</IncludePath>
+              <IncludePath>..\SYSTEM\delay;..\SYSTEM\usart;..\SYSTEM\sys;..\..\2_BEEPER\HARDWARE\BEEPER;..\HARDWARE\LED</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -351,7 +351,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F40_41xxx</Define>
               <Undefine></Undefine>
-              <IncludePath>..\SYSTEM\sys;..\SYSTEM\usart;..\SYSTEM\delay</IncludePath>
+              <IncludePath>..\SYSTEM\sys;..\SYSTEM\usart;..\SYSTEM\delay;..\..\2_BEEPER\HARDWARE</IncludePath>
             </VariousControls>
           </Aads>
           <LDads>
