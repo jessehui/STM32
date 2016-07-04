@@ -1,0 +1,64 @@
+Dependencies for Project '2_BEEP', Target 'Target 1': (DO NOT MODIFY !)
+F (..\SYSTEM\sys\sys.c)(0x5528CA85)(-c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections -I ..\SYSTEM\delay -I ..\SYSTEM\sys -I ..\SYSTEM\usart -I ..\HARDWARE\BEEPER -I ..\HARDWARE\LED-I F:\ChunyangHui\My_GitRepo\STM32\WorkSpace\2_BEEPER\USER\RTE-I E:\MDK\ARM\PACK\Keil\STM32F4xx_DFP\2.9.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-I E:\MDK\ARM\CMSIS\Include-D__UVISION_VERSION="520" -DSTM32F407xx -DSTM32F40_41xxx --C99-o ..\obj\sys.o --omf_browse ..\obj\sys.crf --depend ..\obj\sys.d)
+I (..\SYSTEM\sys\sys.h)(0x555D4ABD)
+I (..\SYSTEM\sys\stm32f4xx.h)(0x53DBA488)
+I (..\SYSTEM\sys\core_cm4.h)(0x5774C5E1)
+I (E:\MDK\ARM\ARMCC\include\stdint.h)(0x56FE42DE)
+I (..\SYSTEM\sys\core_cmInstr.h)(0x53C7D530)
+I (..\SYSTEM\sys\core_cmFunc.h)(0x53C7D530)
+I (..\SYSTEM\sys\core_cm4_simd.h)(0x53C7D530)
+I (..\SYSTEM\sys\system_stm32f4xx.h)(0x53DBA499)
+F (..\SYSTEM\delay\delay.c)(0x5777574B)(-c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections -I ..\SYSTEM\delay -I ..\SYSTEM\sys -I ..\SYSTEM\usart -I ..\HARDWARE\BEEPER -I ..\HARDWARE\LED-I F:\ChunyangHui\My_GitRepo\STM32\WorkSpace\2_BEEPER\USER\RTE-I E:\MDK\ARM\PACK\Keil\STM32F4xx_DFP\2.9.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-I E:\MDK\ARM\CMSIS\Include-D__UVISION_VERSION="520" -DSTM32F407xx -DSTM32F40_41xxx --C99-o ..\obj\delay.o --omf_browse ..\obj\delay.crf --depend ..\obj\delay.d)
+I (..\SYSTEM\delay\delay.h)(0x555D4A36)
+I (..\SYSTEM\sys\sys.h)(0x555D4ABD)
+I (..\SYSTEM\sys\stm32f4xx.h)(0x53DBA488)
+I (..\SYSTEM\sys\core_cm4.h)(0x5774C5E1)
+I (E:\MDK\ARM\ARMCC\include\stdint.h)(0x56FE42DE)
+I (..\SYSTEM\sys\core_cmInstr.h)(0x53C7D530)
+I (..\SYSTEM\sys\core_cmFunc.h)(0x53C7D530)
+I (..\SYSTEM\sys\core_cm4_simd.h)(0x53C7D530)
+I (..\SYSTEM\sys\system_stm32f4xx.h)(0x53DBA499)
+F (..\SYSTEM\usart\usart.c)(0x57776357)(-c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections -I ..\SYSTEM\delay -I ..\SYSTEM\sys -I ..\SYSTEM\usart -I ..\HARDWARE\BEEPER -I ..\HARDWARE\LED-I F:\ChunyangHui\My_GitRepo\STM32\WorkSpace\2_BEEPER\USER\RTE-I E:\MDK\ARM\PACK\Keil\STM32F4xx_DFP\2.9.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-I E:\MDK\ARM\CMSIS\Include-D__UVISION_VERSION="520" -DSTM32F407xx -DSTM32F40_41xxx --C99-o ..\obj\usart.o --omf_browse ..\obj\usart.crf --depend ..\obj\usart.d)
+I (..\SYSTEM\sys\sys.h)(0x555D4ABD)
+I (..\SYSTEM\sys\stm32f4xx.h)(0x53DBA488)
+I (..\SYSTEM\sys\core_cm4.h)(0x5774C5E1)
+I (E:\MDK\ARM\ARMCC\include\stdint.h)(0x56FE42DE)
+I (..\SYSTEM\sys\core_cmInstr.h)(0x53C7D530)
+I (..\SYSTEM\sys\core_cmFunc.h)(0x53C7D530)
+I (..\SYSTEM\sys\core_cm4_simd.h)(0x53C7D530)
+I (..\SYSTEM\sys\system_stm32f4xx.h)(0x53DBA499)
+I (..\SYSTEM\usart\usart.h)(0x5528CC5B)
+I (E:\MDK\ARM\ARMCC\include\stdio.h)(0x56FE42DE)
+F (..\HARDWARE\BEEPER\BEEP.c)(0x5779C3C7)(-c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections -I ..\SYSTEM\delay -I ..\SYSTEM\sys -I ..\SYSTEM\usart -I ..\HARDWARE\BEEPER -I ..\HARDWARE\LED-I F:\ChunyangHui\My_GitRepo\STM32\WorkSpace\2_BEEPER\USER\RTE-I E:\MDK\ARM\PACK\Keil\STM32F4xx_DFP\2.9.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-I E:\MDK\ARM\CMSIS\Include-D__UVISION_VERSION="520" -DSTM32F407xx -DSTM32F40_41xxx --C99-o ..\obj\beep.o --omf_browse ..\obj\beep.crf --depend ..\obj\beep.d)
+I (..\HARDWARE\BEEPER\BEEP.h)(0x5779F06A)
+I (..\SYSTEM\sys\sys.h)(0x555D4ABD)
+I (..\SYSTEM\sys\stm32f4xx.h)(0x53DBA488)
+I (..\SYSTEM\sys\core_cm4.h)(0x5774C5E1)
+I (E:\MDK\ARM\ARMCC\include\stdint.h)(0x56FE42DE)
+I (..\SYSTEM\sys\core_cmInstr.h)(0x53C7D530)
+I (..\SYSTEM\sys\core_cmFunc.h)(0x53C7D530)
+I (..\SYSTEM\sys\core_cm4_simd.h)(0x53C7D530)
+I (..\SYSTEM\sys\system_stm32f4xx.h)(0x53DBA499)
+F (..\HARDWARE\LED\LED.c)(0x5777924B)(-c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections -I ..\SYSTEM\delay -I ..\SYSTEM\sys -I ..\SYSTEM\usart -I ..\HARDWARE\BEEPER -I ..\HARDWARE\LED-I F:\ChunyangHui\My_GitRepo\STM32\WorkSpace\2_BEEPER\USER\RTE-I E:\MDK\ARM\PACK\Keil\STM32F4xx_DFP\2.9.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-I E:\MDK\ARM\CMSIS\Include-D__UVISION_VERSION="520" -DSTM32F407xx -DSTM32F40_41xxx --C99-o ..\obj\led.o --omf_browse ..\obj\led.crf --depend ..\obj\led.d)
+I (..\HARDWARE\LED\LED.h)(0x57778F80)
+I (..\SYSTEM\sys\sys.h)(0x555D4ABD)
+I (..\SYSTEM\sys\stm32f4xx.h)(0x53DBA488)
+I (..\SYSTEM\sys\core_cm4.h)(0x5774C5E1)
+I (E:\MDK\ARM\ARMCC\include\stdint.h)(0x56FE42DE)
+I (..\SYSTEM\sys\core_cmInstr.h)(0x53C7D530)
+I (..\SYSTEM\sys\core_cmFunc.h)(0x53C7D530)
+I (..\SYSTEM\sys\core_cm4_simd.h)(0x53C7D530)
+I (..\SYSTEM\sys\system_stm32f4xx.h)(0x53DBA499)
+F (.\startup_stm32f40_41xxx.s)(0x542E6B02)(--cpu Cortex-M4.fp -g --apcs=interwork -I F:\ChunyangHui\My_GitRepo\STM32\WorkSpace\2_BEEPER\USER\RTE-I E:\MDK\ARM\PACK\Keil\STM32F4xx_DFP\2.9.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-I E:\MDK\ARM\CMSIS\Include--pd "__UVISION_VERSION SETA 520" --pd "STM32F407xx SETA 1"--list ..\startup_stm32f40_41xxx.lst --xref -o ..\obj\startup_stm32f40_41xxx.o --depend ..\obj\startup_stm32f40_41xxx.d)
+F (.\main.c)(0x5779F072)(-c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections -I ..\SYSTEM\delay -I ..\SYSTEM\sys -I ..\SYSTEM\usart -I ..\HARDWARE\BEEPER -I ..\HARDWARE\LED-I F:\ChunyangHui\My_GitRepo\STM32\WorkSpace\2_BEEPER\USER\RTE-I E:\MDK\ARM\PACK\Keil\STM32F4xx_DFP\2.9.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-I E:\MDK\ARM\CMSIS\Include-D__UVISION_VERSION="520" -DSTM32F407xx -DSTM32F40_41xxx --C99-o ..\obj\main.o --omf_browse ..\obj\main.crf --depend ..\obj\main.d)
+I (..\HARDWARE\BEEPER\BEEP.h)(0x5779F06A)
+I (..\SYSTEM\sys\sys.h)(0x555D4ABD)
+I (..\SYSTEM\sys\stm32f4xx.h)(0x53DBA488)
+I (..\SYSTEM\sys\core_cm4.h)(0x5774C5E1)
+I (E:\MDK\ARM\ARMCC\include\stdint.h)(0x56FE42DE)
+I (..\SYSTEM\sys\core_cmInstr.h)(0x53C7D530)
+I (..\SYSTEM\sys\core_cmFunc.h)(0x53C7D530)
+I (..\SYSTEM\sys\core_cm4_simd.h)(0x53C7D530)
+I (..\SYSTEM\sys\system_stm32f4xx.h)(0x53DBA499)
+I (..\HARDWARE\LED\LED.h)(0x57778F80)
+I (..\SYSTEM\delay\delay.h)(0x555D4A36)

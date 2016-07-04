@@ -1,0 +1,11 @@
+--cpu Cortex-M4.fp
+"..\obj\sys.o"
+"..\obj\delay.o"
+"..\obj\usart.o"
+"..\obj\beep.o"
+"..\obj\led.o"
+"..\obj\startup_stm32f40_41xxx.o"
+"..\obj\main.o"
+--ro-base 0x08000000 --entry 0x08000000 --rw-base 0x20000000 --entry Reset_Handler --first __Vectors --strict --summary_stderr --info summarysizes --map --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "..\2_BEEP.map" -o ..\OBJ\2_BEEP.axf
