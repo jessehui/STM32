@@ -286,11 +286,6 @@ typedef struct
 EXTICR寄存器在SYSCFG结构体中定义. 可以看到EXTICR寄存器组总共有4个, 每个32位, 但只用了其低16位. 每个EXTICR寄存器的低16位被以4位分成一组, 这样就可以配置4*4=__16__个引脚(15~0). 然后每一组有4位, 可以用来选择PA~PI(9个).
 
 
-####UART
-`USART1_IRQHandler()`函数是串口1的中断响应函数. 当串口1发生了相应的中断,就会跳到该函数执行. 
-对于`uart_init()`函数, 由于STM32F4采用了分数波特率, 所以STM32F4的串口波特率设置范围很宽, 而且误差很小.
-每个串口都有一个自己独立的波特率寄存器USART_BRR, 通过设置该寄存器就可以达到配置不同波特率的目的.
-
 ####1_LED
 同时配置两个IO口控制LED.  
 ```C
@@ -314,6 +309,13 @@ GPIO_SPEED_100M,GPIO_PUPD_PU); //PF9,PF10 设置
 #define PFout(n)   BIT_ADDR(GPIOF_ODR_Addr,n)  //输出 
 #define PFin(n)    BIT_ADDR(GPIOF_IDR_Addr,n)  //输入
 ```
+或者也可以使用另一种方法, 此方法对处理器依赖更小.  
+```C
+#define LED0 (1<<9) //led0 PF9
+#define LED1 (1<<10) //led1 PF10
+#define LED0_SET(x) GPIOF->ODR=(GPIOF->ODR&~LED0)|(x ? LED0： 0)
+#define LED1_SET(x) GPIOF->ODR=(GPIOF->ODR&~LED1)|(x ? LED1： 0)
+```
 
 
 ####IAP 和 ISP
@@ -335,5 +337,109 @@ ISP: In System Program 在系统编程;
 能否直接用 STM32 的 IO 口驱动呢？ 让我们来分析下：  
 STM32F4 的单个 IO 最大可以提供 25mA 电流（来自数据手册），而蜂鸣器的驱动电流是 30mA左右，两者十分相近，但是全盘考虑， STM32F4 整个芯片的电流， 最大也就 150mA，如果用IO 口直接驱动蜂鸣器，其他地方用电就得省着点了…所以，我们不用 STM32F4 的 IO 直接驱动蜂鸣器，而是通过三极管扩流后再驱动蜂鸣器，这样 STM32F4 的 IO 只需要提供不到 1mA 的电流就足够了。
 
-注意使用位带操作(Bitband)只能在使用端口PORTA~I中.
+注意使用位带操作(Bitband)只能在使用端口`PORTA~I`中.
+
+
+####串口通信
+`USART1_IRQHandler()`函数是串口1的中断响应函数. 当串口1发生了相应的中断,就会跳到该函数执行. 
+对于`uart_init()`函数, 由于STM32F4采用了分数波特率, 所以STM32F4的串口波特率设置范围很宽, 而且误差很小.
+每个串口都有一个自己独立的波特率寄存器USART_BRR, 通过设置该寄存器就可以达到配置不同波特率的目的.
+
+几个与串口基本配置直接相关的寄存器:
+1. 串口时钟使能. 串口作为外设, 由APB2ENR寄存器控制  
+2. 串口波特率设置. 每个串口都有一个自己独立的波特率寄存器USART_BRR  
+3. 串口控制. 每个串口都有3个控制寄存器USART_CR1~3.
+4. 数据发送与接收. 通过数据寄存器USART_DR. 这是一个双寄存器, 包含了TDR,RDR
+5. 串口状态. 可以通过状态寄存器USART_SR读取.   
+
+`!`和`~`的区别:  
+按位取反“~”： 按位取反1变0，0变1  
+逻辑 非“！”： 逻辑取反, false变true,true变false， 在C中，只要不是0就是真
+
+> 自定义的`USART_RX_STA`寄存器定义表
+
+bit15 | bit14 | bit13~0
+-------|------|---------
+接收完成标志| 接收到0X0D标志| 接收到的有效数据个数
+
+
+####中断控制
+要把IO口作为外部中断输入, 有以下几个步骤:
+(1) 初始化IO口为输入:  
+以设置为上拉/下拉输入，也可以设置为浮空输入，但浮空的时候外部一定要带上拉，或者下拉电阻。否则可能导致中断不停的触发。在干扰较大的地方，就算使用了上拉/下拉，也建议使用外部上拉/下拉电阻，这样可以一定程度防止外部干扰带来的影响。
+(2) 开启`SYSCFG`时钟, 设置IO口与中断线的映射关系. IO 口与中断线的对应关系需要配置外部中断配置寄存器 `EXTICR`. 该寄存器在`SYSCFG`类型中.  
+```C
+typedef struct
+{
+  __IO uint32_t MEMRMP;       /*!< SYSCFG memory remap register,                      Address offset: 0x00      */
+  __IO uint32_t PMC;          /*!< SYSCFG peripheral mode configuration register,     Address offset: 0x04      */
+  __IO uint32_t EXTICR[4];    /*!< SYSCFG external interrupt configuration registers, Address offset: 0x08-0x14 */
+  uint32_t      RESERVED[2];  /*!< Reserved, 0x18-0x1C                                                          */ 
+  __IO uint32_t CMPCR;        /*!< SYSCFG Compensation cell control register,         Address offset: 0x20      */
+} SYSCFG_TypeDef;
+```
+(3) 开启与该IO口相对的线上中断, 设置触发条件.
+要配置中断产生的条件， STM32F4 可以配置成上升沿触发，下降沿触发，或者任意电平变化触发，但是不能配置成高电平触发和低电平触发。
+(4) 配置中断分组(NVIC), 并使能中断.
+(5) 编写中断服务函数. 
+
+
+
+####独立看门狗(IWDG)
+STM32F4自带2个看门狗: 独立看门狗(IWDG)和窗口看门狗(WWDG).独立看门狗由内部专门的32KHz低速时钟驱动(LSI,是一个内部RC时钟,并不是准确的32KHz,而是15~47KHz中某个值,看门狗对时间的要求不是很精确,这样是可以的). 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+####Q & A
+
+> 1
+
+```C
+//uart.c中uart_init()函数
+RCC->APB2ENR|=1<<4; //使能串口 1 时钟
+
+//但是根据stm32f4xx.h中的宏
+
+/********************  Bit definition for RCC_APB2ENR register  ***************/
+#define  RCC_APB2ENR_TIM1EN                  ((uint32_t)0x00000001)
+#define  RCC_APB2ENR_TIM8EN                  ((uint32_t)0x00000002)
+#define  RCC_APB2ENR_USART1EN                ((uint32_t)0x00000010)
+#define  RCC_APB2ENR_USART6EN                ((uint32_t)0x00000020)
+#define  RCC_APB2ENR_ADC1EN                  ((uint32_t)0x00000100)
+
+```
+为什么是左移4位?有错吗?
+
+> 2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
