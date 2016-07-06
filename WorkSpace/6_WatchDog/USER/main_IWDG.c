@@ -5,7 +5,9 @@
 #include "BEEP.h"
 #include "delay.h"
 
-int main(void)
+
+
+int TEMP(void)// main函数
 {
 	Stm32_Clock_Init(336,8,2,7);
 	delay_init(168);
@@ -38,3 +40,4 @@ int main(void)
 		delay_ms(10);
 	}
 }
+
