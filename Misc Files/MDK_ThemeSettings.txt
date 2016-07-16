@@ -1,0 +1,101 @@
+#(1)
+# Specification for text selection and caret line
+selection.fore=#000000
+selection.back=#86C7F7
+caret.fore=#FFFFFF
+caret.back=#000020
+
+# Color for vertical edge
+edge.colour=#66FAFA
+
+# C/C++ Editor files
+template.cpp="#define","#define |";"#if","#if |\r\n\r\n#endif";\\
+    "#include","#include ";"Header","// Header:\r\n// File Name: |\r\n// Author:\r\n// Date:\r\n";\\
+    "continue","continue;";"do","do\r\n{\r\n\t// TODO: enter the block content here\r\n\t\r\n\t|\r\n} while ();\r\n";\\
+    "enum","enum |\r\n{\r\n\t\r\n};\r\n";"for","for(|;;)\r\n{\r\n}";\\
+    "fpointer_type","typedef int (* |F)();\r\n";"function","void function(|)\r\n{\r\n\r\n}\r\n";\\
+    "if","if (|)";"ifelse","if (|)\r\n{\r\n}\r\nelse\r\n{\r\n}";\\
+    "struct","struct | \r\n{\r\n\r\n};\r\n";"switch","switch (|)\r\n{\r\n\tcase:\r\n\t\tbreak;\r\n\tcase:\r\n\t\tbreak;\r\n\tdefault:\r\n\t\tbreak;\r\n}";\\
+    "void","void | ();\r\n";"while","while (|)\r\n{\r\n}";\\
+    
+font.monospace.cpp=Consolas
+style.cpp.32=font:Consolas,size:13,fore:#FFFFFF,back:#000020
+style.cpp.4=font:Consolas,size:13,fore:#80FF80,back:#000020
+style.cpp.10=font:Consolas,size:13,fore:#FFFFFF,back:#000020
+style.cpp.1=font:Consolas,size:13,fore:#C0C0C0,back:#000020
+style.cpp.2=font:Consolas,size:13,fore:#C0C0C0,back:#000020
+style.cpp.5=font:Consolas,size:13,fore:#80FFFF,back:#000020,bold,italics
+style.cpp.6=font:Consolas,size:13,fore:#FF8080,back:#000020
+style.cpp.11=font:Consolas,size:13,fore:#FFFF80,back:#000020
+style.cpp.9=font:Consolas,size:13,fore:#FF8040,back:#000020
+style.cpp.7=font:Consolas,size:13,fore:#FF8080,back:#000020
+style.cpp.34=font:Consolas,size:13,fore:#500000,back:#20FFFF
+style.cpp.35=font:Consolas,size:13,fore:#FF0000,back:#000020
+style.cpp.16=font:Consolas,size:13,fore:#FFFF80,back:#000020
+style.cpp.12=font:Consolas,size:13,fore:#000000,back:#E0C0E0
+
+
+
+#(2)
+# Specification for text selection and caret line
+selection.fore=#000000
+selection.back=#86C7F7
+caret.fore=#FFFFFF
+caret.back=#152B2B
+
+# Color for vertical edge
+edge.colour=#66FAFA
+
+
+# C/C++ Editor files  
+template.cpp="#define","#define |";"#if","#if |\r\n\r\n#endif";\\
+
+	"#include","#include ";"Header","// Header:\r\n// File Name: |\r\n// Author:\r\n// Date:\r\n";\\
+
+	"continue","continue;";"do","do\r\n{\r\n\t// TODO: enter the block content here\r\n\t\r\n\t|\r\n} while ();\r\n";\\
+
+	"enum","enum |\r\n{\r\n\t\r\n};\r\n";"for","for(|;;)\r\n{\r\n}";\\
+
+	"fpointer_type","typedef int (* |F)();\r\n";"function","void function(|)\r\n{\r\n\r\n}\r\n";\\
+"if","if (|)";"ifelse","if (|)\r\n{\r\n}\r\nelse\r\n{\r\n}";\\
+
+	"struct","struct | \r\n{\r\n\r\n};\r\n";"switch","switch (|)\r\n{\r\n\tcase:\r\n\t\tbreak;\r\n\tcase:\r\n\t\tbreak;\r\n\tdefault:\r\n\t\tbreak;\r\n}";\\
+
+	"void","void | ();\r\n";"while","while (|)\r\n{\r\n}";\\
+
+
+
+font.monospace.cpp=Consolas
+
+style.cpp.32=font:Consolas,size:14,fore:#FF972F,back:#152B2B
+
+style.cpp.4=font:Consolas,size:14,fore:#007F7F,back:#152B2B
+
+style.cpp.10=font:Consolas,size:14,fore:#FF8040,back:#152B2B
+
+style.cpp.1=font:Consolas,size:14,fore:#AAFFFF,back:#152B2B
+
+style.cpp.2=font:Consolas,size:14,fore:#AAFFFF,back:#152B2B
+
+style.cpp.5=font:Consolas,size:14,fore:#BF0000,back:#152B2B,bold,italics
+
+style.cpp.6=font:Consolas,size:14,fore:#FF8040,back:#152B2B
+
+style.cpp.11=font:Consolas,size:14,fore:#FF8040,back:#152B2B
+
+style.cpp.9=font:Consolas,size:14,fore:#FF0000,back:#152B2B
+
+style.cpp.7=font:Consolas,size:14,fore:#7F007F,back:#152B2B
+
+style.cpp.34=font:Consolas,size:14,fore:#500000,back:#152B2B
+
+style.cpp.35=font:Consolas,size:14,fore:#FF0000,back:#152B2B
+
+style.cpp.16=font:Consolas,size:14,fore:#B00040,back:#152B2B
+
+style.cpp.12=font:Consolas,size:14,fore:#000000,back:#152B2B
+
+
+
+
+
