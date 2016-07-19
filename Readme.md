@@ -93,6 +93,8 @@ Thumb指令可以看做是ARM指令压缩形式的子集，是针对代码密度
 ####锁相环
 PLL(Phase Locked Loop)作用:数字芯片有个时钟树的概念，现在比如就是一根导线代替锁相环，芯片外面在时钟的上升沿开始给芯片送入一组数据，芯片内部由于有时钟树的存在，导致了内部时序电路实际使用的时钟是延迟过的，进而产生一个数据漂移的现象。但是有锁相环了，我们可以把时钟树的其中一个分支接入锁相环，使时钟树末梢的相位频率与参考信号保持一致，就不会有数据漂移的现象了。  
 以上是锁相环最简单的使用，锁相环还有倍频作用，因为输出的时钟是它自己内部的压控振荡器产生的，若加一个分频器，再与输入参考时钟相比较，就可得到一个频率加N倍的时钟信号，当然相位还是和参考时钟是同步的。
+RCC: Reset & Clock Controller
+
 ```c
 //系统时钟初始化函数
 //plln:主PLL倍频系数(PLL倍频),取值范围:64~432.
@@ -461,6 +463,8 @@ STM32F4 的通用定时器包含一个 16 位或 32 位自动重载计数器（ 
 - 预分频寄存器(TIMx_PSC): PSC[15:0]都有用. 计数器时钟频率CK_CNT等于f(ck_psc)/(PSC[15:0]+1). 用于设置对时钟进行分频,然后提供给计数器,作为计数器的时钟.
 - TIMx_SMCR: 选择定时器的时钟来源. 
 - TIMx_CNT: 该寄存器是定时器的计数器, 存储了当前定时器的计数值.
+- TIMx_ARR: 自动重装载寄存器(Auto Reload Register).该寄存器在物理上实际对应2个寄存器.一个程序员可以直接操作的, 另外一个时看不到的, 称为影子寄存器. 事实上起作用的是影子寄存器. 根据 TIMx_CR1 寄存器中 APRE 位的设置： APRE=0 时，预装载寄存器的内容可以随时传送到影子寄存器，此时 2 者是连通的；而 APRE=1 时，在每一次更新事件（ UEV）时，才把预装载寄存器（ ARR） 的内容传送到影子寄存器. `ARR[15:0]`为设置的自动重载值, 当自动重载值为0时, 计数器不工作. 
+- TIMx_SR: 状态寄存器. 用来标记当前与定时器相关的各种事件/中断是否发生. `Bit0`更新中断标志. 发生更新事件时由硬件置`1`(更新中断挂起), 但需要通过软件清`0`(未发生中断).
 
 
 ####STM32时钟控制
@@ -515,11 +519,224 @@ CMSIS 分为 3 个基本功能层：
   - inc 目录存放的是 stm32f4xx_ppp.h 头文件,无需改动。
   - src 目录下面放的是 stm32f4xx_ppp.c 格式的固件库源码文件。每一个.c 文件和一个相应的.h 文件对应。这里的文件也是固件库外设的关键文件，每个外设对应一组文件。
 
-Project 文件夹下面有两个文件夹。顾名思义， STM32F4xx_StdPeriph_Examples 文件夹下面存放的的 ST 官方提供的固件实例源码，在以后的开发过程中，可以参考修改这个官方提供的
-实例来快速驱动自己的外设，很多开发板的实例都参考了官方提供的例程源码，这些源码对以后的学习非常重要。 STM32F4xx_StdPeriph_Template 文件夹下面存放的是工程模板。
+Project 文件夹下面有两个文件夹。顾名思义， STM32F4xx_StdPeriph_Examples 文件夹下面存放的的 ST 官方提供的固件实例源码，在以后的开发过程中，可以参考修改这个官方提供的实例来快速驱动自己的外设，很多开发板的实例都参考了官方提供的例程源码，这些源码对以后的学习非常重要。 STM32F4xx_StdPeriph_Template 文件夹下面存放的是工程模板。
 
 Utilities 文件下就是 __官方评估板__ 的一些对应源码，
 
+根目录中还有一个 stm32f4xx_dsp_stdperiph_lib_um.chm 文件，直接打开可以知道，这是一个固件库的帮助文档，这个文档非常有用
+
+几个重要文件:
+
+1. core_cm4.h 文件位于\STM32F4xx_DSP_StdPeriph_Lib_V1.4.0\Libraries\CMSIS\Include 目录下面的，这个就是 CMSIS 核心文件，提供进入 M4 内核接口，这是 ARM 公司提供，对所有CM4 内核的芯片都一样。你永远都不需要修改这个文件.
+
+2. stm32f4xx.h 和 system_stm32f4xx.h 文件存放在文件夹\STM32F4xx_DSP_StdPeriph_Lib_V1.4.0\Libraries\CMSIS\Device\ST\STM32F4xx\Include 下面。system_stm32f4xx.h 是片上外设接入层系统头文件。主要是申明设置系统及总线时钟相关的函数。与其对应的源文件 system_stm32f4xx.c 在目录\STM32F4xx_DSP_StdPeriph_Lib_V1.4.0\Project\STM32F4xx_StdPeriph_Templates 可以找到。 这个里面有一个非常重要的 SystemInit()函数申明，这个函数在我们系统启动的时候都会调用，用来设置系统的整个系统和总线时钟。
+
+3. stm32f4xx.h 是 STM32F4 片上外设访问层头文件。 这个文件就相当重要了，只要你做STM32F4 开发，你几乎时刻都要查看这个文件相关的定义。这个文件打开可以看到，里面非常多的结构体以及宏定义。 这个文件里面主要是系统寄存器定义申明以及包装内存操作
+
+4. stm32f4xx_it.c,stm32f4xx_it.h 以 及 stm32f4xx_conf.h 等 文 件 ， 我 们 可 以 从\STM32F4xx_DSP_StdPeriph_Lib_V1.4.0\Project\STM32F4xx_StdPeriph_Templates 文件夹中找到。这几个文件我们后面新建工程也有用到。 stm32f4xx_it.c 和 stm32f4xx_it.h 里面是用来编写中断服务函数，中断服务函数也可以随意编写在工程里面的任意一个文件里面，个人觉得这个文件没太大意义。stm32f4xx_conf.h 是外设驱动配置文件。 文件打开可以看到一堆的#include,这里你建立工程的时候，可以注释掉一些你不用的外设头文件。
+
+5. misc.c,misc.h,stm32f4xx_ppp.c,stm32f4xx_ppp.h 以及 stm32f4xx_rcc.c 和 stm32f4xx_rcc.h 文件，这些文件存放在目录 Libraries\STM32F4xx_StdPeriph_Driver。这些文件是 STM32F4 标准的外设库文件。其中 misc.c 和 misc.h 是定义中断优先级分组以及 Systick 定时器相关的函数。 stm32f3xx_rcc.c 和 stm32f4xx_rcc.h 是与 RCC 相关的一些操作函数，作用主要是一些时钟的配置和使能。在任何一个 STM32 工程 RCC 相关的源文件和头文件是必须添加的。对于文件 stm32f4xx_ppp.c 和 stm32f4xx_ppp.h，这就是 stm32F4 标准外设固件库对应的源文件和头文件。包括一些常用外设 GPIO,ADC,USART 等。
+
+6. 文件 Application.c 实际就是说是应用层代码。这个文件名称可以任意取了。 我们工程中，直接取名为 main.c。
+
+7. 实际上一个完整的 STM32F4 的工程光有上面这些文件还是不够的。还缺少非常关键的启动文件。 STM32F4 的启动文件存放在目录\STM32F4xx_DSP_StdPeriph_Lib_V1.4.0\Libraries
+\CMSIS\Device\ST\STM32F4xx\Source\Templates\arm 下面。对于不同型号的 STM32F4 系列对应
+的启动文件也不一样。我们的开发板是 STM32F407 系列所以我们选择的启动文件为
+startup_stm32f40_41xxx.s。 
+
+
+
+
+####Handler机制
+系统main函数是单线程的, 子线程不能修改主线程的任何操作. 所以要用一种方式让子线程中的信息返回到主线程中再做修改. 这就要让主线程与子线程通信.  如何让他们之间进行通信, 用handler这个类, handler操作的是message. 在主线程中, 消息队列是在程序启动时就自动生成的, 而子线程要自己手动建立消息队列.    
+Handler是在主线程中,  它的触发是通过SendMessage()这个方法驱动的, HandleMessage()和SendMessage()是一对, 一个负责接收一个负责发送. 
+
+子线程请求回来的数据, 为了把它交给主线程, 就要在这之前在主线程中创建handler, 然后实现 handleMessage 方法. 
+handler机制被引入的目的就是为了实现线程间通信的。handler一共干了两件事：在子线程中发出message，在主线程中获取、处理message。  
+ 为了能让主线程“适时”得处理子线程所发送的message，显然只能通过回调的方式来实现——开发者只要重写Handler类中处理消息的方法，当子线程发送消时，Handler类中处理消息的方法就会被自动回调。﻿  
+子线程通过主线程的handler将消息放到主线程的消息队列. 主进程从消息队列里取出消息再调用Handler的handlemessage来实现主线程中的各种方法. 
+
+
+####基础知识
+1. `extern`变量声明:  
+C 语言中 extern 可以置于变量或者函数前，以表示变量或者函数的定义在别的文件中，提示编译器遇到此变量和函数时在其他模块中寻找其定义。
+
+2. typedef使用:
+如果不使用typedef, 类似的结构体比如:
+```C
+struct GPIO_{
+  __IO uint32_t MODER;
+  __IO uint32_t OTYPER;
+  //...
+};  //这样就定义了一个结构体
+
+struct GPIO_ GPIOA;
+```
+使用了typedef之后:
+```C
+typedef struct{
+  __IO uint32_t MODER;
+  __IO uint32_t OTYPER;
+  //...
+  }GPIO_Type;
+
+GPIO_Type GPIOA,GPIOB;
+```
+这里的 GPIO_Type 就跟 struct _GPIO 是等同的作用了. 
+
+3. struct 结构体:  
+
+```C
+Struct U_TYPE {
+Int BaudRate
+Int WordLength;
+}usart1,usart2;
+
+//在结构体申明的时候可以定义变量，也可以申明之后定义，
+
+struct U_TYPE usart1,usart2;
+```
+
+结构体成员变量的引用方法是： `结构体变量名字.成员名`
+比如要引用 usart1 的成员 BaudRate，方法是： `usart1.BaudRate;`  
+结构体指针变量定义也是一样的，跟其他变量没有啥区别。
+例如： struct U_TYPE *usart3； //定义结构体指针变量 usart1;
+结构体指针成员变量引用方法是通过“ ->”符号实现，比如要访问 usart3 结构体指针指向的结
+构体的成员变量 BaudRate,方法是：
+Usart3->BaudRate;
+
+
+
+4. 为什么要使用结构体?  
+在我们单片机程序开发过程中，经常会遇到要初始化一个外设比如串口，它的初始化状态是由几个属性来决定的，比如串口号，波特率，极性，以及模式等。对于这种情况，在我们没有学习结构体的时候，我们一般的方法是：  
+`void USART_Init(u8 usartx,u32 u32 BaudRate,u8 parity,u8 mode);`  
+这种方式是有效的同时在一定场合是可取的。但是试想，如果有一天，我们希望往这个函数里面再传入一个参数，那么势必我们需要修改这个函数的定义，重新加入字长这个入口参数。于
+是我们的定义被修改为：  
+`void USART_Init (u8 usartx,u32 BaudRate, u8 parity,u8 mode,u8 wordlength );`   
+但是如果我们这个函数的入口参数是随着开发不断的增多，那么是不是我们就要不断的修改函数的定义呢？这是不是给我们开发带来很多的麻烦？那又怎样解决这种情况呢？这样如果我们使用到结构体就能解决这个问题了。我们可以在不改变入口参数的情况下，只需要改变结构体的成员变量，就可以达到上面改变入口参数的目的。  
+结构体就是将多个变量组合为一个有机的整体。上面的函数， BaudRate,wordlength,Parity,mode,wordlength 这些参数，他们对于串口而言，是一个有机整体，都是来设置串口参数的，所以我们可以将他们通过定义一个结构体来组合在一个。  
+比如:
+```C
+typedef struct
+{
+uint32_t USART_BaudRate;
+uint16_t USART_WordLength;
+uint16_t USART_StopBits;
+uint16_t USART_Parity;
+uint16_t USART_Mode;
+uint16_t USART_HardwareFlowControl;
+} USART_InitTypeDef;
+
+//于是，我们在初始化串口的时候入口参数就可以是 USART_InitTypeDef 类型的变量或者指针变量了
+
+void USART_Init(USART_TypeDef* USARTx, USART_InitTypeDef* USART_InitStruct);
+```
+这样，任何时候，我们只需要修改结构体成员变量，往结构体中间加入新的成员变量，而不需要修改函数定义就可以达到修改入口参数同样的目的了。 这样的好处是不用修改任何函数定义就可以达到增加变量的目的  
+
+5. 时钟
+为什么 STM32 要有多个时钟源呢？ 因为首先 STM32 本身非常复杂，外设非常的多，但是并不是所有外设都需要系统时钟这么高的频率，比如看门狗以及 RTC 只需要几十 k 的时钟即可。同一个电路，时钟越快功耗越大，同时抗电磁干扰能力也会越弱，所以对于较为复杂的 MCU 一般都是采取多时钟源的方法来解决这些问题。
+
+总结一下 SystemInit()函数中设置的系统时钟大小：    
+SYSCLK（系统时钟） =168MHz    
+AHB 总线时钟(HCLK=SYSCLK) =168MHz   
+APB1 总线时钟(PCLK1=SYSCLK/4) =42MHz  
+APB2 总线时钟(PCLK2=SYSCLK/2) =84MHz  
+PLL 主时钟 =168MHz   
+
+时钟配置函数:
+一类是外设时钟使能函数，一类是时钟源和分频因子配置函数，还有一类是外设复位函数。当然还有几个获取时钟源配置的函数。  
+时钟使能函数:  
+`void RCC_AHB1PeriphClockCmd(uint32_t RCC_AHB1Periph, FunctionalState NewState);`   
+
+STM32F4 的外设在使用之前，必须对时钟进行使能，如果没有使能时钟，那么外设是无法正常工作的。对于哪个外设是挂载在哪个总线之下，虽然也可以查手册查询到，但是这里如果大家使用的是库函数的话，实际上是没有必要去查询手册的. 例如:  
+如果我们要使能GPIOA, 只需要在stm32f4xx_rcc.h头文件里搜索GPIOA, 就可以搜索到对应的时钟使能函数的第一个入口参数为`RCC_AHB1Periph_GPIOA`, 从这个宏定义标识符可以看出, GPIOA是挂载在AHB1下边的.同理，对于串口 1 我们可以搜索 USART1，找到标识符为 `RCC_APB2Periph_USART1`，那么很容易知道串口 1 是挂载在 APB2 之下。  
+知道了之后, 调用AHB1总线下外设时钟使能函数`RCC_AHB1PeriphClockCmd`:  
+`RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);`  
+
+还有一类时钟使能函数是时钟源使能函数, STM32F4有5个大类时钟源:  
+
+```C
+void RCC_HSICmd(FunctionalState NewState);
+void RCC_LSICmd(FunctionalState NewState);
+void RCC_PLLCmd(FunctionalState NewState);
+void RCC_PLLI2SCmd(FunctionalState NewState);
+void RCC_PLLSAICmd(FunctionalState NewState);
+void RCC_RTCCLKCmd(FunctionalState NewState);
+
+//具体调用方法:
+RCC_PLLCmd(ENABLE);
+```
+
+第二类时钟功能函数：时钟源选择和分频因子配置函数。这些函数是用来选择相应的时钟源以及配置相应的时钟分频系数。 例如SYSCLK, 可以选择HSI,HSE以及PLL三个中的一个时钟源为系统时钟.  例如要设置系统时钟源为HSI, 那么可以调用系统时钟源配置函数:   
+`RCC_HCNKConfig(RCC_SYSCLKSource_HSI);  //配置时钟源为HSI`  
+或者要设置APB1总线时钟为HCLK的2分频, 也就是设置分频因子为2分频, 具体设置方法为:     
+`RCC_PCLK1Config(RCC_HCLK_Div2);`  
+(APB1, APB2分别对应PCLK1, PCLK2. APB1低速外设时钟, APB2为高速.)
+
+第三类外设复位函数:
+```C
+void RCC_AHB1PeriphResetCmd(uint32_t RCC_AHB1Periph, FunctionalState NewState);
+void RCC_AHB2PeriphResetCmd(uint32_t RCC_AHB2Periph, FunctionalState NewState);
+void RCC_AHB3PeriphResetCmd(uint32_t RCC_AHB3Periph, FunctionalState NewState);
+```
+
+####定时器中断
+定时器配置步骤:
+1. TIM3时钟使能: TIM3是挂载在APB1下, 所以我们通过APB1总线下的使能函数来使能TIM3.  调用的函数是:   
+`RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE); //使能TIM3时钟`  
+2. 初始化定时器参数, 设置自动重装值, 分频系数, 计数方式: 再库函数中, 定时器的初始化参数是通过初始化函数`TIM_TimeBaseInit`实现的.  
+`void TIM_TimeBaseInit(TIM_TypeDef *TIMx, TIM_TimeBaseInitTypeDef* TIM_TimeBaseInitStruct);`  
+第一个参数是确定是哪个定时器, 第二个参数是定时器初始化参数结构体指针, 结构体类型为`TIM_TimeBaseInitTypeDef`. 该结构体定义为:  
+
+```C
+typedef struct
+{
+  uint16_t TIM_Prescaler;
+  uint16_t TIM_CounterMode;
+  uint16_t TIM_Period;
+  uint16_t TIM_ClockDivision;
+  uint8_t TIM_RepetitionCounter;
+} TIM_TimeBaseInitTypeDef;
+```
+
+第一个参数 TIM_Prescaler 是用来设置分频系数的; 第二个参数 TIM_CounterMode 是用来设置计数方式，可以设置为向上计数，向下计数方式还有中央对齐计数方式，比较常用的是向上计数模式 TIM_CounterMode_Up 和向下计数模式 TIM_CounterMode_Down; 第三个参数是设置自动重载计数周期值; 第四个参数是用来设置时钟分频因子。 最后一个参数 TIM_RepetitionCounter 是高级定时器才有用的
+
+针对 TIM3 初始化范例代码格式：
+```C
+TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
+TIM_TimeBaseStructure.TIM_Period = 5000;
+TIM_TimeBaseStructure.TIM_Prescaler =7199;
+TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
+TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);
+```
+3. 设置TIM3_DIER允许更新中断: 因为我们要使用TIM3的更新中断, 寄存器相应位就可使能更新中断. 库函数里定时器中断使能是通过TIM_ITConfig函数来实现的.  
+`void TIM_ITConfig(TIM_TypeDef *TIMx, uint16_t TIM_IT, FunctionalState NewState); `  
+第一个参数是选择定时器号, 取值为TIM1~TIM17; 第二个参数用来指明使能的定时器中断的类型, 包括更新中断TIM_IT_Update, 触发中断TIM_IT_Trigger, 以及捕获中断等等; 第三个参数就是使能或者失能. 例如我们使能TIM3更新中断:  
+`TIM_ITConfig(TIM3, TIM_IT_UPDATE, ENABLE);`
+4. TIM3中断优先级设置: 定时器中断使能之后, 因为要产生中断, 必不可少要设置NVIC相关寄存器, 设置中断优先级. 
+5. 允许TIM3工作, 也就是使能TIM3: 配置完后要开启定时器, 通过TIM3_CR1的CEN位来设置, 在固件库里面使能定时器的函数是通过TIM_Cmd函数来实现的.  
+`void TIM_Cmd(TIM_TypeDef *TIMx, FunctionalState NewState);`
+6. 编写中断服务函数: 通过该函数来处理定时器产生的相关中断。在
+中断产生后，通过状态寄存器的值来判断此次产生的中断属于什么类型。然后执行相关的操作，这里使用的是更新（溢出）中断，所以在状态寄存器 SR 的最低位。在处理完中断之后应该向 TIM3_SR 的最低位写 0，来清除该中断标志。固件库中, 用来读取中断状态寄存器的值判断中断类型的函数是:   
+`ITStatus TIM_GetITStatus(TIM_TypeDef *TIMx, uint16_t);`  
+作用是来判断定时器TIMx的中断类型TIM_IT是否发生中断. 比如要判断定时器3是否发生更新中断, 方法是:  
+`if( TIM_GetITStatus(TIM3, TIM_IT_Update)!=RESET ) {}`  
+清除中断标志位的函数:   
+`void TIM_ClearITPendingBit(TIM_TypeDef *TIMx, uint16_t TIM_IT)`  
+比如在TIM3的溢出中断发生后, 要清除中断标志位, 方法是  
+`TIM_ClearITPendingBit(TIM3, TIM_IT_Update);`  
+
+这里需要说明一下，固件库还提供了两个函数用来判断定时器状态以及清除定时器状态标志位的函数 TIM_GetFlagStatus 和 TIM_ClearFlag，他们的作用和前面两个函数的作用类似。只是在 `TIM_GetITStatus `函数中会先判断这种中断是否使能，使能了才去判断中断标志位，而TIM_GetFlagStatus 直接用来判断状态标志位。
+
+因此初始化函数  
+`void TIM3_Int_Init(u16 arr,u16 psc);`  
+中的2个参数用来设置TIM3的溢出时间. 因为系统初始化 SystemInit 函数里面已经初始化 APB1 的时钟为 4 分频，所以 APB1 的时钟为 42M， 而从 STM32F4 的内部时钟树图得知：当 APB1 的时钟
+分频数为 1 的时候， TIM2~7 以及 TIM12~14 的时钟为 APB1 的时钟，而如果 APB1 的时钟分频数不为 1，那么 TIM2~7 以及 TIM12~14 的时钟频率将为 APB1 时钟的两倍。因此， TIM3 的时钟为 84M，再根据我们设计的 arr 和 psc 的值，就可以计算中断时间了。  
+公式:  `Tout= ((arr+1)*(psc+1))/Tclk；`  
+其中: 
+Tclk: TIM3的输入时钟频率(MHz)  
+Tout: TIM3的溢出时间(us)
 ####Q & A
 
 > 1
