@@ -732,11 +732,181 @@ TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);
 因此初始化函数  
 `void TIM3_Int_Init(u16 arr,u16 psc);`  
 中的2个参数用来设置TIM3的溢出时间. 因为系统初始化 SystemInit 函数里面已经初始化 APB1 的时钟为 4 分频，所以 APB1 的时钟为 42M， 而从 STM32F4 的内部时钟树图得知：当 APB1 的时钟
-分频数为 1 的时候， TIM2~7 以及 TIM12~14 的时钟为 APB1 的时钟，而如果 APB1 的时钟分频数不为 1，那么 TIM2~7 以及 TIM12~14 的时钟频率将为 APB1 时钟的两倍。因此， TIM3 的时钟为 84M，再根据我们设计的 arr 和 psc 的值，就可以计算中断时间了。  
+分频数为 1 的时候， TIM2~7 以及 TIM12~14 的时钟为 APB1 的时钟，而如果 APB1 的时钟分频数不为 1，那么 TIM2~7 以及 TIM12~14 的时钟频率将为 APB1 时钟的两倍。因此， TIM3 的时钟为 84M，再根据我们设计的 arr 和 psc 的值，就可以计算中断时间了。  psc一般使用`(8400-1)`分频.  
 公式:  `Tout= ((arr+1)*(psc+1))/Tclk；`  
 其中: 
 Tclk: TIM3的输入时钟频率(MHz)  
-Tout: TIM3的溢出时间(us)
+Tout: TIM3的溢出时间(us)  
+
+####PWM输出
+PWM Pulse Width Modulation 脉冲宽度调制. STM32F4 的定时器除了 TIM6 和 7。其他的定时器都可以用来产生 PWM 输出。其中高级定时器 TIM1 和 TIM8 可以同时产生多达 7 路的 PWM 输出。而通用定时器也能同时产生多达 4路的 PWM 输出(CH1, CH2, CH3, CH4).   
+要使STM32F4的通用定时器TIMx产生PWM输出, 除了普通定时要用到的寄存器外, 还会用到3个寄存器来控制PWM. 分别是: `捕获/比较模式寄存器(TIMx_CCMR1/2)`, `捕获/比较使能寄存器(TIMx_CCER)`, `捕获/比较寄存器(TIMx_CCR1~4)`.
+
+1. TIMx_CCMR1/2: Capture/Compare Mode Register该寄存器一般有2个 (TIM14只有1个): CCMR1和CCMR2. TIMx_CCMR1控制CH1, CH2, TIMx_CCMR2控制CH3, CH4.   
+关于TIM14_CCMR1: 该寄存器的有些位在不同模式下(比如输入输出), 功能是不一样的.   
+(1) OC1M模式设置位(3 Bit). 总共可以配置成7种模式, 要设置成PWM, 这3位必须设置为110/111(输出电平的极性相反). 
+(2) CC1S通道方向设置(输入输出)默认设置为0(输出). 
+
+2. TIM14_CCER: Capture/Compare Enable Register. 控制着各个输入输出通道的开关. 其中CC1E位是输入/捕获1输出使能位. 要想PWM 从 IO 口输出，这个位必须设置为 1. 
+
+3. TIMx_CCR1~4: 该寄存器共有4个, 对应4个通道CH1~4. 不过TIM14只有1个, 即TIM14_CCR1.   
+(1) 如果通道CC1配置为输出: CCR1为要装载到实际捕获/比较1寄存器的值.   
+如果没有通过TIMx_CCMR寄存器中的OC1PE位来使能预装载功能, 写入的数值会被直接传输至当前寄存器中.    
+(2) 如果通道CC1配置为输入: CCR1为上一个输入捕获1事件(IC1)发生时的计数器值.   
+在输出模式下, 该寄存器的值与CNT的值比较, 这样就可以控制PWM的输出脉宽了. 
+
+#### GNU C 和 ANSI C
+Linux上使用的C编译器是GNU C编译器，其对标准的C（ansi c）进行了一定的扩展，这带来的影响是两方面的。一方面增强了其原来的没有的功能，另一方面却对要编写移植性要求较高的程序带来了一些问题。对于后一个问题，在编写程序时，建议是如果在ANSI C中也提供的同样的功能时，尽量使用ANSI C来实现.   
+1. 变量长度数组  
+在标准C中，我们都知道实例化一个数组的时候，其大小必须是常量。GNU C可以使用一个变量的数值来实例化一个数组。例如，下面的程序是正确的。
+```C
+      int i=10;
+	  char aa[i];
+```
+2. 零长度数组  
+GNU C中是可以的, 但是并不表示这个数组的长度为0, 这只是一种表现形式. 例如:   
+```C
+	struct var_d{
+	int len;
+	char data[0];
+};
+```
+这种表现形式一般用在可变长度的BUFF中, 会发现 `sizeof(struct var_d) == sizeof(int)` 这说明data不占任何空间的. 其实data就是一个常量指针, 指向用上述结构体实例化对象所占内存空间的下一个地址. 用法一般为:  
+```C
+struct var_d *thisline;
+thisline = (struct var_d *)malloc(sizeof(struct var_d) + 10);
+thisline -> len = 10;
+```
+此时data指向的空地址就是上述后面多分配出来的10个字节的首地址, 对于可变的buff, 完全可以用data[i]来读出数据. 
+
+[Reference](http://blog.csdn.net/ssdsafsdsd/article/details/8234736)  
+
+3. 标号元素
+ 标准C要求数组或结构体的初始化数值必须以固定的顺序出现.GNU C，可以通过指定索引或结构体的成员名来以任意的顺序进行初始化。  
+ (1) 数组初始化:  数组的初始化是通过指定数组的索引来实现，在初始化一个数值前在前面添加索引`[INDEX]=`,也可以使用`[FIRST...LAST]=`来指定一个范围。
+ (2) 结构体初始化: 用结构体的成员名来指定.   
+
+ 例子如下:  
+
+```C
+ //数组初始化例子:
+ #define LEN 10
+
+unsigned char da[LEN] = {[3] = 'a'}; 	//通过这个方式将da[3]初始化为'a'
+unsigned char da[LEN] = {[0...LEN-1] = 0}; 	//将数组da全部初始化为0
+
+//结构体初始化例子: 
+struct date{
+	int year;
+	int month;
+	int day;
+	char hour;
+	char min;
+	char sec;
+};
+typedef struct date DATE;
+
+//GNU C实现初始化
+DATE dd{
+	year:2020,
+	month: 2,
+	day: 27,
+	hour: 16,
+	min: 43,
+	sec: 21,
+
+};
+
+//ANSI C实现初始化
+DATE CC{
+	.year = 2002,
+	.month = 2,
+	.day = 22,
+};
+
+```
+
+4. 特殊属性声明
+GNU C允许声明函数、变量和类型的特殊属性，以便进行手工的代码优化和定制代码检查方法。要指定一个声明的属性，主需要在声明后添加__attribute__((ATTRIBUTE))。其中ATTRIBUTE为属性声明，如果存在多个属性，则以逗号分开。GNU C支持noreturn、format、section、aligned、packed等十多个属性。  
+`noreturn` 属性用于函数, 表示该函数从不返回. 这会让编译器优化代码，并消除不必要的警告信息。  
+`format` 属性用于函数, 表示函数使用printf,scanf和strftime风格的参数指定format属性可以让编译器根据格式串检查参数类型。  
+`unused` 用于变量或函数，当他们未被用到时，不会提示警告信息。  
+
+
+#### 字节对齐
+1. 对齐跟数据在内存中的位置有关。如果一个变量的内存地址正好位于它长度的整数倍，他就被称做自然对齐。比如在32位cpu下，假设一个整型变量的地址为0x00000004，那它就是自然对齐的。  
+需要字节对齐的根本原因在于CPU访问数据的效率问题。假设上面整型变量的地址不是自然对齐，比如为0x00000002，则CPU如果取它的值的话需要访问两次内存，第一次取从0x00000002-0x00000003的一个short，第二次取从0x00000004-0x00000005的一个short然后组合得到所要的数据，如果变量在0x00000003地址上的话则要访问三次内存，第一次为char，第二次为short，第三次为char，然后组合得到整型数据。  
+2. 对于标准数据类型，它的地址只要是它的长度的整数倍就行了，而非标准数据类型按下面的原则对齐：  
+数组：按照基本数据类型对齐，第一个对齐了后面的自然也就对齐了。   
+联合 ：按其包含的长度最大的数据类型对齐。   
+结构体： 结构体中每个数据类型都要对齐。  
+For Example:  
+```C
+struct stu{
+　　 char sex;
+　　 int length;
+　　 char name[10];
+　　};
+　　struct stu my_stu;
+
+```
+由于在x86下，GCC默认按4字节对齐，它会在sex后面跟name后面分别填充三个和两个字节使length和整个结构体对齐。于是我们sizeof(my_stu)会得到长度为20，而不是15.
+
+3. 我们可以按照自己设定的对齐大小来编译程序，GNU使用__attribute__选项来设置，比如我们想让刚才的结构按一字节对齐，我们可以这样定义结构体:   
+```C
+struct stu{
+　　 char sex;
+　　 int length;
+　　 char name[10];
+　　}__attribute__ ((aligned (1))); 
+　　
+　　struct stu my_stu;
+```
+则sizeof(my_stu)可以得到大小为15。
+
+4. 在设计不同CPU下的通信协议时，或者编写硬件驱动程序时寄存器的结构这两个地方都需要按一字节对齐。即使看起来本来就自然对齐的也要使其对齐，以免不同的编译器生成的代码不一样.
+
+5. 在缺省情况下，C编译器为每一个变量或是数据单元按其自然对界条件分配空间。一般地，可以通过下面的方法来改变缺省的对界条件：
+- 使用伪指令#pragma pack (n)，C编译器将按照n个字节对齐。
+- 使用伪指令#pragma pack ()，取消自定义字节对齐方式。
+另外，还有如下的一种方式：
+- __attribute((aligned (n)))，让所作用的结构成员对齐在n字节自然边界上。如果结构中有成员的长度大于n，则按照最大成员的长度来对齐。
+- __attribute__ ((packed))，取消结构在编译过程中的优化对齐，按照实际占用字节数进行对齐。
+
+[Reference](http://blog.csdn.net/21aspnet/article/details/6729724) 
+
+
+
+
+
+#### __attribute__ ((packed)) 
+1. __attribute__ ((packed))的作用就是告诉编译器_取消_结构在编译过程中的优化对齐. 按照实际占用字节数进行对齐, 是_GCC_特有的语法. 这个功能跟编译器有关. GCC编译器默认的不是紧凑模式.
+```C
+//在GCC下：
+struct my{ char ch; int a;} sizeof(int)=4;sizeof(my)=8;	//（默认: 非紧凑模式）
+
+//在GCC下：
+struct my
+{ 	char ch; 
+	int a;
+}__attrubte__ ((packed));
+
+//sizeof(int)=4;sizeof(my)=5
+```
+
+`__attribute__`书写特征是：`__attribute__`前后都有两个下划线，并且后面会紧跟一对括弧，括弧里面是相应的`__attribute__`参数。  
+__attribute__语法格式为：  
+
+`__attribute__ ((attribute-list))`  
+
+其位置约束：放于声明的尾部“；”之前。  
+
+2. packed属性：使用该属性可以使得变量或者结构体成员使用最小的对齐方式，即对变量是一字节对齐，对域（field）是位对齐。  
+packed是类型属性（Type Attribute）的一个参数，使用packed可以减小对象占用的空间。需要注意的是，attribute属性的效力与你的连接器也有关，如果你的连接器最大只支持16字节对齐，那么你此时定义32字节对齐也是无济于事的。
+
+
+
+
 ####Q & A
 
 > 1
