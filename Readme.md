@@ -914,6 +914,138 @@ I2C(Inter-Integrated Circuit) 总线是两线式串行总线, 用于连接微控
 I2C分为硬件I2C和软件I2C.硬件比软件模拟快很多, 占用时间少. 硬件I2C只要把数据送到指定的寄存器就可以, 不需要自己写时序. I2C协议主要在乎的是时序的准确性, 所以在没有专门IIC模块的单片机中, 可以用2个口来模拟输出I2C协议的波形. 
 
 
+####DMA
+DMA: Direct Memory Access. 直接存储器访问. DMA传输方式无需CPU直接控制传输, 也_没有_中断处理方式那样保留现场和恢复现场的过程. 通过硬件为RAM与I/O设备开辟一条直接传送数据的通路. 使CPU效率大为提高.  
+STM32F4最多有2个DMA控制器, 共16个数据流(每个控制器8个). 每个DMA控制器都用于管理一个或多个外设的存储器访问请求. 每个数据流可以有最多8个通道. 每个数据流通道都有一个仲裁器, 用于处理DMA请求间的优先级.  (1个DMA控制器 -> 8个数据流 -> 64个通道)   
+STM32F4的DMA的一些特性:  
+- 双AHB主总线架构, 一个用于存储器访问, 一个用于外设访问. 
+- 仅支持32位访问的AHB从编程接口
+- 每个DMA控制器有8个数据流, 每个数据流有多达8个通道
+- 每个数据流有单独的四级32位先进先出存储器缓冲区(FIFO, First In First Out), 可用于FIFO模式或直接模式.
+- 通过硬件可以将每个数据流配置为: 
+	1. 支持外设到存储器, 存储器到外设, 存储器到存储器传输的常规通道
+	2. 支持在存储器方双缓冲的双缓冲区通道
+- 8个数据流中的每一个都连接到专用硬件DMA通道(请求)
+- DMA数据流请求之间的优先级可用软件编程(4个级别: 非常高, 高, 中, 低), 在软件优先级相同的情况下可以通过硬件决定优先级(例如请求0的优先级高于请求1).
+- 每个数据流也支持通过软件触发 存储器到存储器的传输(限DMA2)
+- 可供每个数据流选择的通道请求多达8个. 此选择可由软件配置
+
+存储器到存储器需要外设接口可以访问存储器. 仅DMA2的外设接口可以访问存储器. 所以仅DMA2支持存储器到存储器的传输.   
+数据流的多通道选择, 是通过DMA_SxCR寄存器控制的. 
+
+DMA设置相关的寄存器:  
+1. DMA中断状态寄存器: `DMA_LISR` 和 `DMA_HISR`. 每个寄存器管理4个数据流, LISR控制0~3, HISR控制4~7.   
+`TCIFx` (stream x transfer complete interrupt flag): 数据流x传输完成中断标志. 由硬件置1, 软件清零(通过向DMA_LIFCR对应位写入1).    
+`HTIFx` (stream x half transfer interrupt flag): 数据流x半传输中断标志. 硬件置1, 软件清零.
+`TEIFx` (stream x transfer error interrupt flag): 数据流x传输错误中断方式. 
+硬件置1, 软件清零.
+`DMEIFx` (stream x direct mode error interrupt flag): 直接模式错误中断标志.
+`FEIFx` (stream x FIFO error interrupt flag): FIFO错误中断标志  
+
+如果开启了DMA_LISR中这些位对应的中断, 则在达到条件后就会跳到中断服务函数中. 如果没有开启, 也可以查询来获得当前DMA传输的状态. 所以我们常用的是`TCIFx`, 此寄存器为只读寄存器. 所以在这些位被硬件置1后, 需要用对应的DMA_LIFCR中的位清零.  
+
+2. DMA中断标志清除寄存器: `DMA_LIFCR` 和 `DMA_HIFCR`. LIFCR负责0~3, HIFCR负责4~7.  
+`CTCIFx` (Stream x clear transfer complete interrupt flag): 将此位写1时, DMA_LISR寄存器中相应的`TCIFx`清零.  
+`CHTIFx` (clear half transfer interrupt flag), `CTEIFx`, `CDMEIFx`, `CFEIFx`分别对应各自的`DMA_LISR`或`DMA_HISR`中的位. 
+
+3. DMA数据流x数据项数寄存器: `DMA_SxNDTR`. 这个寄存器控制DMA数据流x的每次传输所要传输的数据量. 随传输进行而递减, 这里是数据项数目, 不是字节数, 比如设置数据位宽为16位, 那么传输一次(一个项)就是2个字节.   
+
+4. DMA数据流x的外设地址寄存器: `DMA_SxPAR`. 用来存储STM32F4外设的地址, 比如使用串口1, 该寄存器必须写入 0x40011004 (就是&usart_dr)  
+
+5. DMA数据流x配置寄存器: `DMA_SxCR`. 该寄存器控制着DMA的很多相关信息, 包括数据宽度, 外设及存储宽度, 优先级, 增量模式, 传输方向, 中断允许, 使能. DMA_SxCR是DMA传输的核心控制寄存器.   
+
+6. DMA数据流x的存储器地址寄存器: `DMA_SxM0AR` 和 `DMA_SxM1AR`. 因为STM32F4的DMA支持双缓存. M1AR仅在双缓冲模式下, 才有效. DMA_SxM0AR和DMA_CPARx差不多, 但是是用来放存储器地址的.     
+  
+  
+DMA配置步骤:  
+(1) 使能DMA2时钟, 并等待数据流可配置.  
+DMA的时钟使能是通过AHB1ENR来控制的, 所以要先使能时钟, 才能配置DMA相关寄存器. 另外, 要对配置寄存器(DMA_SxCR)进行设置, 必须先等待其最低位为0(也就是DMA传输禁止了). 因为  
+`#define DMA_SxCR_EN                          ((uint32_t)0x00000001)`  
+
+```C
+RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2, ENABLE);	//DMA2时钟使能
+
+//然后等待DMA可配置, 也就是等待DMA_SxCR寄存器最低位为0
+while(DMA_GetCmdStatus(DMA_Streamx) != DISABLE) {}	//等待DMA可配置
+
+```
+(2) 初始化DMA2数据流7, 包括配置通道, 外设地址, 存储器地址, 传输数据量  
+`void DMA_Init(DMA_Stream_TypeDef *DMAy_Streamx, DMA_Init_TypeDef *DMA_InitStruct);`  
+第一个参数是指定初始化的DMA数据流编号(y = 1 or 2; x = 0~7). 第二个参数跟其他外设一样是通过初始化结构体成员变量值来达到初始化的目的. 
+
+```C
+typedef struct
+{
+uint32_t DMA_Channel; 	//用来设置DMA数据流对应的通道	
+uint32_t DMA_PeripheralBaseAddr;	// 设置DMA传输的外设基地址
+uint32_t DMA_Memory0BaseAddr;	// 内存基地址 存放DMA传输数据的内存地址
+uint32_t DMA_DIR;	// 设置数据传输方向, 是从外设读取数据到内存还是从内存读取数据发送到外设
+uint32_t DMA_BufferSize;	// 一次传输数据量的大小
+uint32_t DMA_PeripheralInc;	//  设置传输数据的时候外设地址是不变还是递增
+uint32_t DMA_MemoryInc;		//	设置传输数据时候内存地址是否递增
+uint32_t DMA_PeripheralDataSize;	//设置外设的数据长度是为字节传输(8bit), 半字(16bit)还是字(32bit)传输
+uint32_t DMA_MemoryDataSize;	//设置内存的数据长度, 类似上一个
+uint32_t DMA_Mode;		// 设置DMA模式是否循环采集
+uint32_t DMA_Priority;	// 设置DMA通道优先级
+uint32_t DMA_FIFOMode;	// 设置是否开启FIFO模式
+uint32_t DMA_FIFOThreshold;		// 用来选择FIFO阈值
+uint32_t DMA_MemoryBurst;	// 存储器突发传输配置
+uint32_t DMA_PeripheralBurst;	//
+}DMA_InitTypeDef;
+```
+
+第六个参数 DMA_PeripheralInc 设置传输数据的时候外设地址是不变还是递增。如果设置
+为递增，那么下一次传输的时候地址加 1，这里因为我们是一直往固定外设地址&USART1->DR发送数据，所以地址不递增，值为 `DMA_PeripheralInc_Disable`. 
+
+第十四个参数 DMA_MemoryBurst 用来配置存储器突发传输配置。可以选择为 4 个节拍的增量突发传输 DMA_MemoryBurst_INC4， 8 个节拍的增量突发传输 DMA_MemoryBurst_INC8， 16 个节拍的增量突发传输 DMA_MemoryBurst_INC16 以及单次传输 DMA_MemoryBurst_Single。
+
+第十五个参数 DMA_PeripheralBurst 用来配置外设突发传输配置。跟前面一个参数
+DMA_MemoryBurst 作用类似，只不过一个针对的是存储器，一个是外设。
+
+关于FIFO模式的应用:  
+FIFO一般用于不同时钟域之间的数据传输，比如FIFO的一端时AD数据采集，另一端时计算机的PCI总线，假设其AD采集的速率为16位 100K SPS，那么每秒的数据量为100K×16bit=1.6Mbps,而PCI总线的速度为33MHz，总线宽度32bit,其最大传输速率为1056Mbps,在两个不同的时钟域间就可以采用FIFO来作为数据缓冲。
+
+另外对于不同宽度的数据接口也可以用FIFO，例如单片机位8位数据输出，而DSP可能是16位数据输入，在单片机与DSP连接时就可以使用FIFO来达到数据匹配的目的。
+
+
+(3) 使能串口的DMA发送  
+开启串口的DMA发送功能, 即  
+`USART_DMACmd(USART1, USART_DMAReq_Tx, ENABLE);`  
+
+(4) 使能DMA2数据流7, 启动传输  
+`void DMA_Cmd(DMA_Stream_TypeDef * DMAy_Streamx, FunctionalState NewState);`  
+使能DMA2_Stream7方法: `DMA_Cmd(DMA2_Stream7, ENABLE);`  
+
+(5) 查询DMA传输状态  
+查询DMA传输通道的状态:  
+`FlagStatus DMA_GetFlagStatus(DMA_Stream_TypeDef * DMAy_Streamx, uint32_t DMAy_FLAG);`  
+获取当前剩余数据量大小的函数:  
+`uint16_t DMA_GetCurrCounter(DMA_Stream_TypeDef *DMAy_Streamx);`
+
+
+
+
+
+
+
+
+
+#### C++嵌入C代码
+
+```C++
+#ifdef __cplusplus
+        extern "C" {
+        #endif
+//c语法代码段
+#ifdef __cplusplus
+        }
+        #endif //
+
+```
+
+`__cplusplus`是CPP中的自定义宏，则表示这是一段cpp的代码，编译器按c++的方式编译系统.。
+如果这时候我们需要使用c语言的代码,那么就需要加上(extern "C" { )这一段来说明，要不编译器会把c代码按c++模式编译，会出现问题。  
+C和C++对函数的处理方式是不同的.extern "C"是使C++能够调用C写作的库文件的一个手段，如果要对编译器提示使用C的方式来处理函数的话，那么就要使用extern "C"来说明。
 
 ####Q & A
 
