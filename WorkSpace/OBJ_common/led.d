@@ -1,0 +1,10 @@
+..\..\obj_common\led.o: ..\HARDWARE\LED\LED.c
+..\..\obj_common\led.o: ..\HARDWARE\LED\LED.h
+..\..\obj_common\led.o: ..\SYSTEM\sys\sys.h
+..\..\obj_common\led.o: ..\SYSTEM\sys\stm32f4xx.h
+..\..\obj_common\led.o: ..\SYSTEM\sys\core_cm4.h
+..\..\obj_common\led.o: E:\MDK\ARM\ARMCC\Bin\..\include\stdint.h
+..\..\obj_common\led.o: ..\SYSTEM\sys\core_cmInstr.h
+..\..\obj_common\led.o: ..\SYSTEM\sys\core_cmFunc.h
+..\..\obj_common\led.o: ..\SYSTEM\sys\core_cm4_simd.h
+..\..\obj_common\led.o: ..\SYSTEM\sys\system_stm32f4xx.h

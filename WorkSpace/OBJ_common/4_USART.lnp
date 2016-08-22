@@ -1,0 +1,13 @@
+--cpu Cortex-M4.fp
+"..\..\obj_common\startup_stm32f40_41xxx.o"
+"..\..\obj_common\delay.o"
+"..\..\obj_common\sys.o"
+"..\..\obj_common\usart.o"
+"..\..\obj_common\main.o"
+"..\..\obj_common\beep.o"
+"..\..\obj_common\key.o"
+"..\..\obj_common\led.o"
+--strict --scatter "..\..\OBJ_common\4_USART.sct"
+--summary_stderr --info summarysizes --map --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "..\..\OBJ_common\4_USART.map" -o ..\..\OBJ_common\4_USART.axf

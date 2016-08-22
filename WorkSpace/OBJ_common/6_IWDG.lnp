@@ -7,7 +7,8 @@
 "..\..\obj_common\key.o"
 "..\..\obj_common\led.o"
 "..\..\obj_common\wdg.o"
-"..\..\obj_common\main.o"
+"..\..\obj_common\main_wwdg.o"
+"..\..\obj_common\main_iwdg.o"
 --strict --scatter "..\..\OBJ_common\6_IWDG.sct"
 --summary_stderr --info summarysizes --map --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers

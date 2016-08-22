@@ -40,7 +40,7 @@ I (..\SYSTEM\sys\core_cmInstr.h)(0x53C7D530)
 I (..\SYSTEM\sys\core_cmFunc.h)(0x53C7D530)
 I (..\SYSTEM\sys\core_cm4_simd.h)(0x53C7D530)
 I (..\SYSTEM\sys\system_stm32f4xx.h)(0x53DBA499)
-F (..\HARDWARE\KEY\KEY.c)(0x577A215A)(-c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections -I ..\SYSTEM\delay -I ..\SYSTEM\sys -I ..\SYSTEM\usart -I ..\HARDWARE\BEEPER -I ..\HARDWARE\KEY -I ..\HARDWARE\LED -I ..\HARDWARE\WDG-I F:\ChunyangHui\My_GitRepo\STM32\WorkSpace\6_WatchDog\USER\RTE-I E:\MDK\ARM\PACK\Keil\STM32F4xx_DFP\2.9.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-I E:\MDK\ARM\CMSIS\Include-D__UVISION_VERSION="520" -DSTM32F407xx -DSTM32F40_41xxx --C99-o ..\..\obj_common\key.o --omf_browse ..\..\obj_common\key.crf --depend ..\..\obj_common\key.d)
+F (..\HARDWARE\KEY\KEY.c)(0x577CBBC9)(-c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections -I ..\SYSTEM\delay -I ..\SYSTEM\sys -I ..\SYSTEM\usart -I ..\HARDWARE\BEEPER -I ..\HARDWARE\KEY -I ..\HARDWARE\LED -I ..\HARDWARE\WDG-I F:\ChunyangHui\My_GitRepo\STM32\WorkSpace\6_WatchDog\USER\RTE-I E:\MDK\ARM\PACK\Keil\STM32F4xx_DFP\2.9.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-I E:\MDK\ARM\CMSIS\Include-D__UVISION_VERSION="520" -DSTM32F407xx -DSTM32F40_41xxx --C99-o ..\..\obj_common\key.o --omf_browse ..\..\obj_common\key.crf --depend ..\..\obj_common\key.d)
 I (..\HARDWARE\KEY\KEY.h)(0x577A20F5)
 I (..\SYSTEM\sys\sys.h)(0x555D4ABD)
 I (..\SYSTEM\sys\stm32f4xx.h)(0x577B57DD)
@@ -61,8 +61,8 @@ I (..\SYSTEM\sys\core_cmInstr.h)(0x53C7D530)
 I (..\SYSTEM\sys\core_cmFunc.h)(0x53C7D530)
 I (..\SYSTEM\sys\core_cm4_simd.h)(0x53C7D530)
 I (..\SYSTEM\sys\system_stm32f4xx.h)(0x53DBA499)
-F (..\HARDWARE\WDG\WDG.c)(0x577C73A5)(-c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections -I ..\SYSTEM\delay -I ..\SYSTEM\sys -I ..\SYSTEM\usart -I ..\HARDWARE\BEEPER -I ..\HARDWARE\KEY -I ..\HARDWARE\LED -I ..\HARDWARE\WDG-I F:\ChunyangHui\My_GitRepo\STM32\WorkSpace\6_WatchDog\USER\RTE-I E:\MDK\ARM\PACK\Keil\STM32F4xx_DFP\2.9.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-I E:\MDK\ARM\CMSIS\Include-D__UVISION_VERSION="520" -DSTM32F407xx -DSTM32F40_41xxx --C99-o ..\..\obj_common\wdg.o --omf_browse ..\..\obj_common\wdg.crf --depend ..\..\obj_common\wdg.d)
-I (..\HARDWARE\WDG\WDG.h)(0x577C699E)
+F (..\HARDWARE\WDG\WDG.c)(0x577CBAB5)(-c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections -I ..\SYSTEM\delay -I ..\SYSTEM\sys -I ..\SYSTEM\usart -I ..\HARDWARE\BEEPER -I ..\HARDWARE\KEY -I ..\HARDWARE\LED -I ..\HARDWARE\WDG-I F:\ChunyangHui\My_GitRepo\STM32\WorkSpace\6_WatchDog\USER\RTE-I E:\MDK\ARM\PACK\Keil\STM32F4xx_DFP\2.9.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-I E:\MDK\ARM\CMSIS\Include-D__UVISION_VERSION="520" -DSTM32F407xx -DSTM32F40_41xxx --C99-o ..\..\obj_common\wdg.o --omf_browse ..\..\obj_common\wdg.crf --depend ..\..\obj_common\wdg.d)
+I (..\HARDWARE\WDG\WDG.h)(0x577CBA9D)
 I (..\SYSTEM\sys\sys.h)(0x555D4ABD)
 I (..\SYSTEM\sys\stm32f4xx.h)(0x577B57DD)
 I (..\SYSTEM\sys\core_cm4.h)(0x5774C5E1)
@@ -71,7 +71,20 @@ I (..\SYSTEM\sys\core_cmInstr.h)(0x53C7D530)
 I (..\SYSTEM\sys\core_cmFunc.h)(0x53C7D530)
 I (..\SYSTEM\sys\core_cm4_simd.h)(0x53C7D530)
 I (..\SYSTEM\sys\system_stm32f4xx.h)(0x53DBA499)
-F (.\main.c)(0x577C734E)(-c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections -I ..\SYSTEM\delay -I ..\SYSTEM\sys -I ..\SYSTEM\usart -I ..\HARDWARE\BEEPER -I ..\HARDWARE\KEY -I ..\HARDWARE\LED -I ..\HARDWARE\WDG-I F:\ChunyangHui\My_GitRepo\STM32\WorkSpace\6_WatchDog\USER\RTE-I E:\MDK\ARM\PACK\Keil\STM32F4xx_DFP\2.9.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-I E:\MDK\ARM\CMSIS\Include-D__UVISION_VERSION="520" -DSTM32F407xx -DSTM32F40_41xxx --C99-o ..\..\obj_common\main.o --omf_browse ..\..\obj_common\main.crf --depend ..\..\obj_common\main.d)
+I (..\HARDWARE\LED\LED.h)(0x57778F80)
+F (.\main_WWDG.c)(0x577CBCAE)(-c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections -I ..\SYSTEM\delay -I ..\SYSTEM\sys -I ..\SYSTEM\usart -I ..\HARDWARE\BEEPER -I ..\HARDWARE\KEY -I ..\HARDWARE\LED -I ..\HARDWARE\WDG-I F:\ChunyangHui\My_GitRepo\STM32\WorkSpace\6_WatchDog\USER\RTE-I E:\MDK\ARM\PACK\Keil\STM32F4xx_DFP\2.9.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-I E:\MDK\ARM\CMSIS\Include-D__UVISION_VERSION="520" -DSTM32F407xx -DSTM32F40_41xxx --C99-o ..\..\obj_common\main_wwdg.o --omf_browse ..\..\obj_common\main_wwdg.crf --depend ..\..\obj_common\main_wwdg.d)
+I (..\HARDWARE\WDG\WDG.h)(0x577CBA9D)
+I (..\SYSTEM\sys\sys.h)(0x555D4ABD)
+I (..\SYSTEM\sys\stm32f4xx.h)(0x577B57DD)
+I (..\SYSTEM\sys\core_cm4.h)(0x5774C5E1)
+I (E:\MDK\ARM\ARMCC\include\stdint.h)(0x56FE42DE)
+I (..\SYSTEM\sys\core_cmInstr.h)(0x53C7D530)
+I (..\SYSTEM\sys\core_cmFunc.h)(0x53C7D530)
+I (..\SYSTEM\sys\core_cm4_simd.h)(0x53C7D530)
+I (..\SYSTEM\sys\system_stm32f4xx.h)(0x53DBA499)
+I (..\HARDWARE\LED\LED.h)(0x57778F80)
+I (..\SYSTEM\delay\delay.h)(0x555D4A36)
+F (.\main_IWDG.c)(0x577CBCAE)(-c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections -I ..\SYSTEM\delay -I ..\SYSTEM\sys -I ..\SYSTEM\usart -I ..\HARDWARE\BEEPER -I ..\HARDWARE\KEY -I ..\HARDWARE\LED -I ..\HARDWARE\WDG-I F:\ChunyangHui\My_GitRepo\STM32\WorkSpace\6_WatchDog\USER\RTE-I E:\MDK\ARM\PACK\Keil\STM32F4xx_DFP\2.9.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-I E:\MDK\ARM\CMSIS\Include-D__UVISION_VERSION="520" -DSTM32F407xx -DSTM32F40_41xxx --C99-o ..\..\obj_common\main_iwdg.o --omf_browse ..\..\obj_common\main_iwdg.crf --depend ..\..\obj_common\main_iwdg.d)
 I (..\HARDWARE\LED\LED.h)(0x57778F80)
 I (..\SYSTEM\sys\sys.h)(0x555D4ABD)
 I (..\SYSTEM\sys\stm32f4xx.h)(0x577B57DD)
@@ -83,7 +96,7 @@ I (..\SYSTEM\sys\core_cm4_simd.h)(0x53C7D530)
 I (..\SYSTEM\sys\system_stm32f4xx.h)(0x53DBA499)
 I (..\SYSTEM\usart\USART.h)(0x5528CC5B)
 I (E:\MDK\ARM\ARMCC\include\stdio.h)(0x56FE42DE)
-I (..\HARDWARE\WDG\WDG.h)(0x577C699E)
+I (..\HARDWARE\WDG\WDG.h)(0x577CBA9D)
 I (..\HARDWARE\KEY\KEY.h)(0x577A20F5)
 I (..\SYSTEM\delay\delay.h)(0x555D4A36)
 I (..\HARDWARE\BEEPER\BEEP.h)(0x5779F06A)
