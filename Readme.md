@@ -881,10 +881,34 @@ struct stu{
 [Reference](http://blog.csdn.net/21aspnet/article/details/6729724) 
 
 
+#### struct结构体
+struct一般和typedef连用. Example:   
+```C
+typedef struct Student{
+    int ID;
+    int age;
+    char *name;
+}Stu; 
+
+Stu stu1;
+
+```
+`Stu`相当于`struct Student`的别名.`struct Student`理论上必须一起出现才能表示它应该表示的意思.   
+
+当然也可以不连用, 只是比较麻烦. Example:  
+```C
+struct Student{
+    int ID;
+    int age;
+    char *name;    
+}
+
+struct Student stu1;
+
+```
 
 
-
-#### __attribute__ ((packed)) 
+#### 关于 __attribute__ ((packed)) 
 1. __attribute__ ((packed))的作用就是告诉编译器_取消_结构在编译过程中的优化对齐. 按照实际占用字节数进行对齐, 是_GCC_特有的语法. 这个功能跟编译器有关. GCC编译器默认的不是紧凑模式.
 ```C
 //在GCC下：
