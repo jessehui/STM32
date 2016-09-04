@@ -186,15 +186,15 @@ void LCD_Init(void)
 	vu32 i =0;
 	GPIO_InitTypeDef GPIO_InitStructure;
 	FSMC_NORSRAMInitTypeDef FSMC_NORSRAMInitStructure;
-	FSMC_NORSRAMTimingInitTypeDef readWriteTiming;
+	FSMC_NORSRAMTimingInitTypeDef readWriteTiming;	//默认的读写时序, 也可以单独作为读时序
 	FSMC_NORSRAMTimingInitTypeDef writeTiming;
 
-	//GPIO, FSMC 时钟使能
+	//1. GPIO, FSMC 时钟使能
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB | RCC_AHB1Periph_GPIOD | RCC_AHB1Periph_GPIOE | 
 		RCC_AHB1Periph_GPIOF | RCC_AHB1Periph_GPIOG , ENABLE);	//使能PB,PD,PE,PF,PG时钟
 	RCC_AHB3PeriphClockCmd(RCC_AHB3Periph_FSMC, ENABLE);
 
-	//GPIO 初始化
+	//2. GPIO 初始化
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_15;	//PB15推挽输出, 控制背光
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
@@ -208,6 +208,116 @@ void LCD_Init(void)
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
 	GPIO_Init(GPIOD,&GPIO_InitStructure);
+
+	GPIO_InitStructure.GPIO_Pin = (0x1FF<<7);	//PE7~15, AF out
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;	//复用输出
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;	//推挽输出
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+	GPIO_Init(GPIOE,&GPIO_InitStructure);
+
+
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12;	//PF12, FSMC_A6
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;	//复用输出
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;	//推挽输出
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+	GPIO_Init(GPIOF,&GPIO_InitStructure);
+
+
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;	//复用输出
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;	//推挽输出
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+	GPIO_Init(GPIOG,&GPIO_InitStructure);
+
+	//3. 引脚复用映射设置 全部引脚复用为FSMC模式 
+	GPIO_PinAFConfig(GPIOD,GPIO_PinSource0,GPIO_AF_FSMC);	//PD0 复用为 FSMC功能
+	GPIO_PinAFConfig(GPIOD,GPIO_PinSource1,GPIO_AF_FSMC);
+	GPIO_PinAFConfig(GPIOD,GPIO_PinSource2,GPIO_AF_FSMC);
+	GPIO_PinAFConfig(GPIOD,GPIO_PinSource3,GPIO_AF_FSMC);
+	GPIO_PinAFConfig(GPIOD,GPIO_PinSource4,GPIO_AF_FSMC);
+	GPIO_PinAFConfig(GPIOD,GPIO_PinSource5,GPIO_AF_FSMC);
+	GPIO_PinAFConfig(GPIOD,GPIO_PinSource6,GPIO_AF_FSMC);
+	GPIO_PinAFConfig(GPIOD,GPIO_PinSource7,GPIO_AF_FSMC);
+	GPIO_PinAFConfig(GPIOD,GPIO_PinSource8,GPIO_AF_FSMC);
+	GPIO_PinAFConfig(GPIOD,GPIO_PinSource9,GPIO_AF_FSMC);
+	GPIO_PinAFConfig(GPIOD,GPIO_PinSource10,GPIO_AF_FSMC);
+	GPIO_PinAFConfig(GPIOD,GPIO_PinSource11,GPIO_AF_FSMC);
+	GPIO_PinAFConfig(GPIOD,GPIO_PinSource12,GPIO_AF_FSMC);
+
+	GPIO_PinAFConfig(GPIO_E, GPIO_PinSource7,GPIO_AF_FSMC);
+	
+	GPIO_PinAFConfig(GPIOF, GPIO_PinSource12, GPIO_AF_FSMC);
+	GPIO_PinAFConfig(GPIOG, GPIO_PinSource12, GPIO_AF_FSMC);
+
+	//4. FSMC初始化
+	//读时序
+	readWriteTiming.FSMC_AddressSetupTime = 0xF;	//地址建立时间为16个HCLK
+	readWriteTiming.FSMC_AddressHoldTime = 0x00;	//地址保持时间 模式A未用到
+	readWriteTiming.FSMC_DataSetupTime = 24; 	//数据保存时间为25个HCLK
+	readWriteTiming.FSMC_BusTurnAroundDuration = 0x00;
+	readWriteTiming.FSMC_CLKDivision = 0x00;	//时钟分频
+	readWriteTiming.FSMC_DataLatency = 0x00;
+	readWriteTiming.FSMC_AccessMode = FSMC_AccessMode_A;
+
+	//写时序
+	writeTiming.FSMC_AddressSetupTime = 8;	//
+	writeTiming.FSMC_AddressHoldTime = 0;
+	writeTiming.FSMC_DataSetupTime = 8;
+	writeTiming.FSMC_BusTurnAroundDuration = 0x00;
+	writeTiming.FSMC_CLKDivision = 0x00;
+	writeTiming.FSMC_DataLatency = 0x00;
+	writeTiming.FSMC_AccessMode = FSMC_AccessMode_A;
+
+	//都在FSMC_NORSRAMInitTypeDef数据结构里边
+	FSMC_NORSRAMInitStructure.FSMC_Bank = FSMC_Bank1_NORSRAM4;	//bank1 sec4
+	FSMC_NORSRAMInitStructure.FSMC_DataAddressMux = FSMC_DataAddressMux_Disable;	//不复用数据
+	FSMC_NORSRAMInitStructure.FSMC_MemoryType = FSMC_Memory_Type_SRAM;
+	FSMC_NORSRAMInitStructure.FSMC_MemoryDataWidth = FSMC_MemoryDataWidth_16b;	//存储器数据宽度为16bit
+	FSMC_NORSRAMInitStructure.FSMC_BurstAccessMode = FSMC_BurstAccessMode_Disable;	//
+	FSMC_NORSRAMInitStructure.FSMC_WaitSignalPolarity = FSMC_WaitSignalPolarity_Low;
+	FSMC_NORSRAMInitStructure.FSMC_AsynchronousWait = FSMC_AsynchronousWait_Disable;
+	FSMC_NORSRAMInitStructure.FSMC_WriteOperation = FSMC_WriteOperation_Enable;	//存储器写使能
+	FSMC_NORSRAMInitStructure.FSMC_ExtendedMode = FSMC_ExtendedMode_Enable;	//读写使用不同的时序
+	FSMC_NORSRAMInitStructure.FSMC_ReadWriteTimingStruct = &readWriteTiming;	//读写时序
+	FSMC_NORSRAMInitStructure.FSMC_WriteTimingStruct = &writeTiming;	//写时序
+
+	FSMC_NORSRAMInit(&FSMC_NORSRAMInitStructure);//初始化配置
+
+
+	//5. 使能FSMC
+	FSMC_NORSRAMCmd(FSMC_Bank1_NORSRAM4, ENABLE);
+	delay_ms(50);
+	lcddev.id = LCD_ReadReg(0x0000);
+
+	//6. 不同的LCD驱动器对应不同的初始化设置
+	if(lcddev.id<0xff || lcddev.id == 0xffff || lcddev.id == 0x9300)	//ID不正确的情况下, 9341在未被复位的情况下会被读成9300
+	{	
+		//尝试读取9341 ID
+		LCD_WR_REG(0xD3);
+		lcddev.id = LCD_RD_DATA();	//dummy read
+		lcddev.id = LCD_RD_DATA();	//读到0x00
+		lcddev.id = LCD_RD_DATA();	//读到93
+		lcddev.id <<= 8;	//左移8位
+		lcddev.id  |= LCD_RD_DATA();	//读41
+
+	}
+
+	if(lcddev.id == 0x9341 || lcddev.id == 0x5310)
+	{
+		//如果是这几个IC, 则设置WR时序为最快
+		//重新配置写时序控制寄存器时序
+		//bank1e应该就是bank1_extended就是使用不同读写时序的
+		FSMC_Bank1E -> BWTR[6] &= ~(0xF<<0);//地址建立时间清零
+		FSMC_Bank1E -> BWTR[6] &= ~(0xf<<8);	//数据保存时间清零
+		FSMC_Bank1E -> BWTR[6] |= (3<<0);	//地址建立时间为3个HCLK = 18ns
+		FSMC_Bank1E -> BWTR[6] |= (2<<8);	//数据保存时间为6ns*3个HCLK
+	}
+	
+
+
 }
 
 
