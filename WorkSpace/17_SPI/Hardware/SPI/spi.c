@@ -78,8 +78,11 @@ void SPI1_SetSpeed(u8 SPI_BaudRatePrescaler)
 u8 SPI1_ReadWriteByte(u8 TxData)
 {
 	while(SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_Flag_TXE) == RESET)
-		{}//等待发送区为空
-}
+	{}//等待发送区为空
+	SPI_I2S_SendData(SPI1, TxData);	//发送一个byte数据
+	while(SPI_I2S_GetFlagStatus(SPI1,SPI_I2S_Flag_RXNE) == RESET)
+	{}//等待接收完成
+}	return SPI_I2S_ReceiveData(SPI1);	//返回接收的数据
 
 
 
