@@ -73,7 +73,7 @@ void SPI1_SetSpeed(u8 SPI_BaudRatePrescaler)
 
 
 //SPI1 读写一个字节
-//TxData: 要读入的字节
+//TxData: 要写入的字节
 //返回: 读取的字节
 u8 SPI1_ReadWriteByte(u8 TxData)
 {
