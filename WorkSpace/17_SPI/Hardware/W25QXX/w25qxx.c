@@ -8,6 +8,8 @@ u16 W25QXX_TYPE = W25Q128;	//默认型号是W25Q128
 //4Kbytes为一个Sector, 16个扇区为1个Block
 //W25Q128
 //容量为16M字节,共有128个Block,4096个Sector 
+//each sector has 256 pages or 65536 bytes
+
 
 //初始化SPI FLASH的IO口
 void W25QXX_Init(void)
@@ -155,18 +157,18 @@ void W25QXX_Write_NoCheck(u8 *pBuffer, u32 WriteAddr, u16 NumByteToWrite)
 	u16 pageRemain;
 	pageRemain = 256 - WriteAddr%256;	//单页剩余的字节数
 	if(NumByteToWrite <= pageRemain)
-		pageRemain = NumByteToWrite;
+		pageRemain = NumByteToWrite;	//可以在这一页内写完
 	while(1)
 	{
 		W25QXX_Write_Page(pBuffer, WriteAddr,pageRemain);
-		if(NumByteToWrite == pageRemain)
+		if(NumByteToWrite == pageRemain)	//上边if赋的值
 			break;
-		else	//NumByteToWrite > pageRemain
+		else	//NumByteToWrite > pageRemain 一页写不完
 		{
-			pBuffer += pageRemain;
+			pBuffer += pageRemain;		//原地址加上已经写的字节数
 			WriteAddr += pageRemain;
 
-			NumByteToWrite -= pageRemain;
+			NumByteToWrite -= pageRemain;	//减去已经写的字节数
 			if(NumByteToWrite>256)
 				pageRemain = 256;	//一次可以写入256个字节
 			else	pageRemain = NumByteToWrite;	//不够256个字节了
